@@ -1,0 +1,54 @@
+services:
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: kadrix-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - CAMPAIGN_SERVICE_URL=http://campaign-service:8001
+      - MEDIA_SERVICE_URL=http://media-service:8002
+      - FEEDBACK_SERVICE_URL=http://feedback-service:8003
+    depends_on:
+      - campaign-service
+      - media-service
+      - feedback-service
+    networks:
+      - kadrix-network
+
+  campaign-service:
+    build:
+      context: ./services/campaign-service
+      dockerfile: Dockerfile
+    container_name: kadrix-campaign-service
+    ports:
+      - "8001:8001"
+    networks:
+      - kadrix-network
+
+  media-service:
+    build:
+      context: ./services/media-service
+      dockerfile: Dockerfile
+    container_name: kadrix-media-service
+    ports:
+      - "8002:8002"
+    networks:
+      - kadrix-network
+
+  feedback-service:
+    build:
+      context: ./services/feedback-service
+      dockerfile: Dockerfile
+    container_name: kadrix-feedback-service
+    ports:
+      - "8003:8003"
+    networks:
+      - kadrix-network
+
+networks:
+  kadrix-network:
+    driver: bridge
+
+# Made with Bob
