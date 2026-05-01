@@ -59,6 +59,15 @@ export interface CampaignImproveResponse {
   changes: string[];
 }
 
+export interface MediaUploadResponse {
+  file_id: string;
+  filename: string;
+  size_bytes: number;
+  format: string;
+  transcript: string;
+  product_context: string;
+}
+
 // ============================================================================
 // Error Handling
 // ============================================================================
@@ -127,6 +136,28 @@ export async function improveCampaign(
       '/campaigns/improve',
       payload
     );
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+}
+
+/**
+ * Upload an optional product demo video and receive extracted MVP context.
+ * @param file Video file selected by the user
+ * @returns Mock transcript and product context from the media service
+ */
+export async function uploadMedia(file: File): Promise<MediaUploadResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await apiClient.post<MediaUploadResponse>('/media/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000,
+    });
     return response.data;
   } catch (error) {
     throw handleApiError(error);

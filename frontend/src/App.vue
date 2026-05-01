@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-toolbar-title class="header-title">
           <span class="brand-name">KadriX</span>
-          <span class="brand-tagline">AI-Powered Campaign Assistant</span>
+          <span class="brand-tagline">Campaign Workflow Platform</span>
         </q-toolbar-title>
       </q-toolbar>
     </q-header>

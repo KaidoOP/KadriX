@@ -82,14 +82,111 @@
                 class="q-mb-md"
               />
 
+              <div class="demo-video-section q-mb-md">
+                <div class="demo-video-section__header">
+                  <div>
+                    <div class="section-title">Optional Demo Video</div>
+                    <p class="section-description">
+                      Upload a short product walkthrough or app demo.
+                    </p>
+                  </div>
+                  <q-chip
+                    v-if="mediaUploadResult"
+                    color="positive"
+                    text-color="white"
+                    icon="check_circle"
+                    size="sm"
+                  >
+                    Context added
+                  </q-chip>
+                </div>
+
+                <q-banner class="demo-video-banner" rounded>
+                  <template v-slot:avatar>
+                    <q-icon name="movie" color="primary" />
+                  </template>
+                  KadriX will use the extracted context to improve the campaign direction.
+                  Recommended max file size: 100MB.
+                </q-banner>
+
+                <q-file
+                  v-model="selectedVideoFile"
+                  label="Select video file"
+                  accept="video/*"
+                  outlined
+                  dense
+                  clearable
+                  class="q-mt-md"
+                  :disable="isUploadingMedia"
+                  @update:model-value="handleVideoFileSelected"
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+
+                <div v-if="selectedVideoFile" class="selected-file-row">
+                  <q-chip icon="movie" color="grey-3" text-color="dark">
+                    {{ selectedVideoFile.name }}
+                  </q-chip>
+                  <span class="selected-file-size">
+                    {{ formatFileSize(selectedVideoFile.size) }}
+                  </span>
+                </div>
+
+                <q-linear-progress
+                  v-if="isUploadingMedia"
+                  indeterminate
+                  color="primary"
+                  class="q-mt-md"
+                />
+
+                <div class="demo-video-actions">
+                  <q-btn
+                    label="Analyze Demo Video"
+                    color="primary"
+                    outline
+                    icon="analytics"
+                    :loading="isUploadingMedia"
+                    :disable="isGenerating || isUploadingMedia"
+                    @click="handleUploadMedia"
+                  />
+                </div>
+
+                <q-card
+                  v-if="mediaUploadResult"
+                  flat
+                  bordered
+                  class="media-preview-card"
+                >
+                  <q-card-section>
+                    <div class="media-preview-card__meta">
+                      <q-chip color="positive" text-color="white" icon="task_alt" size="sm">
+                        Analyzed
+                      </q-chip>
+                      <span>{{ mediaUploadResult.filename }}</span>
+                      <span>{{ formatFileSize(mediaUploadResult.size_bytes) }}</span>
+                      <span>{{ mediaUploadResult.format }}</span>
+                    </div>
+
+                    <div class="media-preview-card__content">
+                      <div class="preview-label">
+                        {{ mediaPreviewLabel }}
+                      </div>
+                      <p>{{ mediaPreviewText }}</p>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+
               <q-input
                 v-model="formData.video_context"
                 label="Video Context (Optional)"
-                placeholder="Describe any video content or visual elements"
+                placeholder="Add extracted demo context or describe relevant product visuals"
                 outlined
                 dense
                 type="textarea"
-                rows="2"
+                rows="3"
                 class="q-mb-md"
               />
 
@@ -408,14 +505,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   generateCampaign,
   improveCampaign,
+  uploadMedia,
   type CampaignGenerateRequest,
   type CampaignData,
   type CampaignImproveResponse,
+  type MediaUploadResponse,
   type ApiError,
 } from '../services/api';
 
@@ -448,6 +547,10 @@ const currentCampaign = ref<CampaignData | null>(null);
 const improvedCampaign = ref<CampaignImproveResponse | null>(null);
 const isGenerating = ref(false);
 const isImproving = ref(false);
+const isUploadingMedia = ref(false);
+const selectedVideoFile = ref<File | null>(null);
+const mediaUploadResult = ref<MediaUploadResponse | null>(null);
+const maxVideoFileSizeBytes = 100 * 1024 * 1024;
 
 // Feedback
 const feedbackText = ref('');
@@ -458,6 +561,19 @@ const feedbackSuggestions = [
   'Make it more casual and friendly',
   'Focus on brand awareness',
 ];
+
+const mediaPreviewLabel = computed(() =>
+  mediaUploadResult.value?.product_context ? 'Extracted Product Context' : 'Transcript Preview'
+);
+
+const mediaPreviewText = computed(() => {
+  const text =
+    mediaUploadResult.value?.product_context ||
+    mediaUploadResult.value?.transcript ||
+    '';
+
+  return text.length > 360 ? `${text.slice(0, 360)}...` : text;
+});
 
 // Load demo data
 function loadDemoData() {
@@ -475,6 +591,81 @@ function loadDemoData() {
     message: 'Demo data loaded successfully',
     position: 'top',
   });
+}
+
+function handleVideoFileSelected(file: File | null) {
+  mediaUploadResult.value = null;
+
+  if (!file) {
+    return;
+  }
+
+  if (!file.type.startsWith('video/')) {
+    selectedVideoFile.value = null;
+    $q.notify({
+      type: 'warning',
+      message: 'Please select a video file.',
+      position: 'top',
+    });
+    return;
+  }
+
+  if (file.size > maxVideoFileSizeBytes) {
+    selectedVideoFile.value = null;
+    $q.notify({
+      type: 'warning',
+      message: 'Please select a video file up to 100MB.',
+      position: 'top',
+    });
+  }
+}
+
+function formatFileSize(sizeBytes: number) {
+  if (sizeBytes < 1024) {
+    return `${sizeBytes} B`;
+  }
+
+  const sizeKb = sizeBytes / 1024;
+  if (sizeKb < 1024) {
+    return `${sizeKb.toFixed(1)} KB`;
+  }
+
+  return `${(sizeKb / 1024).toFixed(1)} MB`;
+}
+
+async function handleUploadMedia() {
+  if (!selectedVideoFile.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Select a demo video before analyzing it.',
+      position: 'top',
+    });
+    return;
+  }
+
+  isUploadingMedia.value = true;
+
+  try {
+    const response = await uploadMedia(selectedVideoFile.value);
+    mediaUploadResult.value = response;
+    formData.value.video_context = response.product_context || response.transcript;
+
+    $q.notify({
+      type: 'positive',
+      message: 'Demo video context added to the campaign input.',
+      position: 'top',
+    });
+  } catch (error) {
+    const apiError = error as ApiError;
+    $q.notify({
+      type: 'negative',
+      message: `Could not analyze demo video: ${apiError.message}`,
+      position: 'top',
+      timeout: 5000,
+    });
+  } finally {
+    isUploadingMedia.value = false;
+  }
 }
 
 // Generate campaign
@@ -649,6 +840,95 @@ function useImprovedVersion() {
   .form-actions {
     display: flex;
     justify-content: flex-end;
+  }
+}
+
+.demo-video-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfcfd;
+  padding: 16px;
+}
+
+.demo-video-section__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  color: #172033;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.section-description {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.demo-video-banner {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #334155;
+  font-size: 13px;
+}
+
+.selected-file-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.selected-file-size {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.demo-video-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.media-preview-card {
+  margin-top: 14px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.media-preview-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.media-preview-card__content {
+  margin-top: 12px;
+
+  .preview-label {
+    margin-bottom: 6px;
+    color: #172033;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.6;
   }
 }
 
