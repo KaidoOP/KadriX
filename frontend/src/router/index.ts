@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import HomePage from '../pages/HomePage.vue';
+import CampaignDashboard from '../pages/CampaignDashboard.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomePage,
+      name: 'dashboard',
+      component: CampaignDashboard,
     },
   ],
 });
