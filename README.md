@@ -128,13 +128,13 @@ bob_sessions/
 
 ## Optional IBM watsonx Usage
 
-KadriX can optionally use IBM watsonx.ai as the runtime AI layer for campaign generation and campaign improvement.
+KadriX can optionally use IBM watsonx.ai to support campaign generation and campaign improvement.
 
 Possible watsonx.ai use cases:
 
 - Generate campaign strategy
-- Generate hooks and ad copy
-- Generate short video scripts
+- Support hook and ad copy creation
+- Support short video script creation
 - Improve campaign output based on feedback
 - Rewrite content for different tones
 
