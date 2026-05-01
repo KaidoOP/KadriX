@@ -24,6 +24,7 @@ app.add_middleware(
 CAMPAIGN_SERVICE_URL = os.getenv("CAMPAIGN_SERVICE_URL", "http://campaign-service:8001")
 MEDIA_SERVICE_URL = os.getenv("MEDIA_SERVICE_URL", "http://media-service:8002")
 FEEDBACK_SERVICE_URL = os.getenv("FEEDBACK_SERVICE_URL", "http://feedback-service:8003")
+CREATIVE_SERVICE_URL = os.getenv("CREATIVE_SERVICE_URL", "http://creative-service:8004")
 
 # Request/Response Models
 class CampaignGenerateRequest(BaseModel):
@@ -122,6 +123,55 @@ async def upload_media(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=503,
             detail=f"Media service unavailable: {str(e)}"
+        )
+
+@app.post("/api/creative/render-preview-video")
+async def render_preview_video(request: dict):
+    """
+    Generate preview video from campaign blueprint
+    Proxies request to creative-service
+    """
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{CREATIVE_SERVICE_URL}/creative/render-preview-video",
+                json=request
+            )
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Creative service error: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Creative service unavailable: {str(e)}"
+        )
+
+@app.get("/api/creative/assets/{filename}")
+async def get_creative_asset(filename: str):
+    """
+    Get generated video file
+    Proxies request to creative-service
+    """
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{CREATIVE_SERVICE_URL}/creative/assets/{filename}"
+            )
+            response.raise_for_status()
+            return response
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Creative service error: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Creative service unavailable: {str(e)}"
         )
 
 if __name__ == "__main__":

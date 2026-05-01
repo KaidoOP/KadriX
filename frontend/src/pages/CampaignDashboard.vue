@@ -250,6 +250,134 @@
 
             <!-- Campaign Content -->
             <div v-if="currentCampaign && !isGenerating" class="campaign-content">
+              <!-- Video Ad Blueprint -->
+              <div class="video-blueprint">
+                <div class="blueprint-header">
+                  <div>
+                    <q-badge color="primary" label="Video Ad Blueprint" />
+                    <h2>60-Second Video Ad Blueprint</h2>
+                    <p>
+                      Demo-led campaign direction for storyboard, voiceover, production mood, and
+                      future preview-video rendering.
+                    </p>
+                  </div>
+                  <q-icon name="movie_filter" size="42px" color="primary" />
+                </div>
+
+                <q-card flat bordered class="main-hook-card">
+                  <q-card-section>
+                    <div class="blueprint-kicker">Main Hook</div>
+                    <p>{{ currentCampaign.main_hook || 'No main hook returned yet.' }}</p>
+                  </q-card-section>
+                </q-card>
+
+                <div class="blueprint-grid">
+                  <q-card flat bordered class="blueprint-detail-card">
+                    <q-card-section>
+                      <div class="detail-heading">
+                        <q-icon name="ondemand_video" color="primary" />
+                        <span>Video Concept</span>
+                      </div>
+                      <p>{{ currentCampaign.video_concept || 'No video concept returned yet.' }}</p>
+                    </q-card-section>
+                  </q-card>
+
+                  <q-card flat bordered class="blueprint-detail-card">
+                    <q-card-section>
+                      <div class="detail-heading">
+                        <q-icon name="schedule" color="primary" />
+                        <span>One-Minute Video Plan</span>
+                      </div>
+                      <p>{{ currentCampaign.one_minute_video_plan || 'No one-minute plan returned yet.' }}</p>
+                    </q-card-section>
+                  </q-card>
+                </div>
+
+                <div class="production-direction">
+                  <q-card flat bordered class="direction-card">
+                    <q-card-section>
+                      <q-icon name="theater_comedy" color="primary" />
+                      <div>
+                        <div class="direction-label">Mood Direction</div>
+                        <p>{{ currentCampaign.mood_direction || 'Not specified.' }}</p>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+
+                  <q-card flat bordered class="direction-card">
+                    <q-card-section>
+                      <q-icon name="music_note" color="primary" />
+                      <div>
+                        <div class="direction-label">Music Direction</div>
+                        <p>{{ currentCampaign.music_direction || 'Not specified.' }}</p>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+
+                  <q-card flat bordered class="direction-card">
+                    <q-card-section>
+                      <q-icon name="palette" color="primary" />
+                      <div>
+                        <div class="direction-label">Visual Style</div>
+                        <p>{{ currentCampaign.visual_style || 'Not specified.' }}</p>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+
+                <q-card flat bordered class="storyboard-card">
+                  <q-card-section>
+                    <div class="detail-heading q-mb-md">
+                      <q-icon name="view_timeline" color="primary" />
+                      <span>Storyboard</span>
+                    </div>
+
+                    <q-timeline
+                      v-if="currentCampaign.storyboard_scenes?.length"
+                      color="primary"
+                      layout="dense"
+                    >
+                      <q-timeline-entry
+                        v-for="scene in currentCampaign.storyboard_scenes"
+                        :key="`${scene.timestamp}-${scene.scene_title}`"
+                        :title="scene.scene_title"
+                        :subtitle="scene.timestamp"
+                      >
+                        <div class="storyboard-copy">
+                          <div class="storyboard-label">Visual Direction</div>
+                          <p>{{ scene.visual_direction }}</p>
+                          <div class="storyboard-label">Narration</div>
+                          <p>{{ scene.narration }}</p>
+                        </div>
+                      </q-timeline-entry>
+                    </q-timeline>
+
+                    <q-banner v-else rounded class="blueprint-fallback">
+                      <template v-slot:avatar>
+                        <q-icon name="info" color="primary" />
+                      </template>
+                      Storyboard scenes were not returned for this campaign version.
+                    </q-banner>
+                  </q-card-section>
+                </q-card>
+
+                <q-expansion-item
+                  class="voiceover-expansion"
+                  icon="record_voice_over"
+                  label="Voiceover Script"
+                  caption="Narration direction for a future 60-second preview video"
+                  default-opened
+                >
+                  <q-card flat bordered class="voiceover-card">
+                    <q-card-section>
+                      <pre>{{ currentCampaign.voiceover_script || 'No voiceover script returned yet.' }}</pre>
+                    </q-card-section>
+                  </q-card>
+                </q-expansion-item>
+              </div>
+
+              <q-separator class="q-my-xl" />
+
               <!-- Product Summary -->
               <div class="content-section">
                 <div class="section-label">Product Summary</div>
@@ -943,6 +1071,186 @@ function useImprovedVersion() {
 }
 
 .campaign-content {
+  .video-blueprint {
+    margin-bottom: 32px;
+    border: 1px solid #d7e3df;
+    border-radius: 8px;
+    background: #f8fbfa;
+    padding: 20px;
+  }
+
+  .blueprint-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+
+    h2 {
+      margin: 10px 0 8px;
+      color: #172033;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    p {
+      max-width: 720px;
+      margin: 0;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  }
+
+  .main-hook-card {
+    margin-bottom: 16px;
+    border-color: #9fd4c5;
+    border-radius: 8px;
+    background: #ffffff;
+
+    .blueprint-kicker {
+      margin-bottom: 8px;
+      color: #1f8a70;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    p {
+      margin: 0;
+      color: #172033;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+  }
+
+  .blueprint-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .blueprint-detail-card,
+  .storyboard-card,
+  .voiceover-card {
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .blueprint-detail-card p {
+    margin: 10px 0 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .detail-heading {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #172033;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .production-direction {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .direction-card {
+    border-radius: 8px;
+    background: #ffffff;
+
+    .q-card__section {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .direction-label {
+      margin-bottom: 6px;
+      color: #172033;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  }
+
+  .storyboard-card {
+    margin-bottom: 16px;
+  }
+
+  .storyboard-copy {
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.55;
+
+    p {
+      margin: 0 0 10px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .storyboard-label {
+    margin-bottom: 4px;
+    color: #172033;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .blueprint-fallback {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #334155;
+  }
+
+  .voiceover-expansion {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .voiceover-card {
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+
+    pre {
+      margin: 0;
+      color: #374151;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+  }
+
   .content-section {
     margin-bottom: 32px;
 

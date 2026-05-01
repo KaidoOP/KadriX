@@ -10,10 +10,12 @@ services:
       - CAMPAIGN_SERVICE_URL=http://campaign-service:8001
       - MEDIA_SERVICE_URL=http://media-service:8002
       - FEEDBACK_SERVICE_URL=http://feedback-service:8003
+      - CREATIVE_SERVICE_URL=http://creative-service:8004
     depends_on:
       - campaign-service
       - media-service
       - feedback-service
+      - creative-service
     networks:
       - kadrix-network
 
@@ -46,6 +48,21 @@ services:
       - "8003:8003"
     networks:
       - kadrix-network
+
+  creative-service:
+    build:
+      context: ./services/creative-service
+      dockerfile: Dockerfile
+    container_name: kadrix-creative-service
+    ports:
+      - "8004:8004"
+    volumes:
+      - creative-videos:/app/output
+    networks:
+      - kadrix-network
+
+volumes:
+  creative-videos:
 
 networks:
   kadrix-network:

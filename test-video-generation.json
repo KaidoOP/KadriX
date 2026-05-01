@@ -1,0 +1,48 @@
+{
+  "campaign_id": "test-campaign-001",
+  "main_hook": "Transform your product launch with AI-powered video campaigns",
+  "voiceover_script": "Voiceover style: professional and engaging. Show how KadriX helps teams create compelling video ads in minutes, not days.",
+  "video_concept": "A 60-second demo showing the KadriX platform workflow from campaign creation to video preview generation.",
+  "storyboard_scenes": [
+    {
+      "timestamp": "0:00-0:05",
+      "scene_title": "The Challenge",
+      "visual_direction": "Show frustrated marketer looking at complex video editing software",
+      "narration": "Creating video ads shouldn't take weeks of production time"
+    },
+    {
+      "timestamp": "0:05-0:15",
+      "scene_title": "Introducing KadriX",
+      "visual_direction": "Clean dashboard interface with campaign creation form",
+      "narration": "KadriX uses AI to generate complete video campaign blueprints instantly"
+    },
+    {
+      "timestamp": "0:15-0:25",
+      "scene_title": "Blueprint Generation",
+      "visual_direction": "Show the campaign blueprint with storyboard scenes appearing",
+      "narration": "Get a full storyboard, voiceover script, and visual direction in seconds"
+    },
+    {
+      "timestamp": "0:25-0:35",
+      "scene_title": "Preview Video",
+      "visual_direction": "Click 'Generate Preview' button and watch video render",
+      "narration": "Generate a preview video to visualize your campaign before production"
+    },
+    {
+      "timestamp": "0:35-0:45",
+      "scene_title": "Iterate & Improve",
+      "visual_direction": "Show feedback loop and campaign refinement",
+      "narration": "Refine your campaign with AI-powered feedback and regenerate instantly"
+    },
+    {
+      "timestamp": "0:45-0:55",
+      "scene_title": "Launch Ready",
+      "visual_direction": "Final polished campaign ready for production",
+      "narration": "Go from idea to production-ready campaign in minutes"
+    }
+  ],
+  "mood_direction": "Professional, modern, and efficient with a focus on speed and quality",
+  "music_direction": "Upbeat corporate background music with steady tempo",
+  "visual_style": "Clean, modern UI with smooth transitions and clear typography",
+  "call_to_action": "Start creating AI-powered video campaigns today at kadrix.ai"
+}

@@ -34,6 +34,13 @@ export interface AdCopyVariant {
   character_count: number;
 }
 
+export interface StoryboardScene {
+  timestamp: string;
+  scene_title: string;
+  visual_direction: string;
+  narration: string;
+}
+
 export interface CampaignData {
   campaign_id: string;
   version: number;
@@ -46,6 +53,14 @@ export interface CampaignData {
   ad_copy_variants: AdCopyVariant[];
   call_to_action: string;
   video_script: string;
+  main_hook: string;
+  voiceover_script: string;
+  video_concept: string;
+  storyboard_scenes: StoryboardScene[];
+  mood_direction: string;
+  music_direction: string;
+  visual_style: string;
+  one_minute_video_plan: string;
 }
 
 export interface CampaignGenerateResponse extends CampaignData {}
