@@ -4,3 +4,4 @@ pydantic==2.5.3
 moviepy==1.0.3
 Pillow==10.2.0
 numpy==1.26.3
+ibm-watson==8.0.0

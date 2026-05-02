@@ -36,6 +36,8 @@ services:
     container_name: kadrix-media-service
     ports:
       - "8002:8002"
+    volumes:
+      - media-uploads:/app/uploads
     networks:
       - kadrix-network
 
@@ -58,11 +60,18 @@ services:
       - "8004:8004"
     volumes:
       - creative-videos:/app/output
+      - media-uploads:/app/uploads:ro
+    environment:
+      - USE_IBM_TTS=${USE_IBM_TTS:-false}
+      - IBM_TTS_API_KEY=${IBM_TTS_API_KEY:-}
+      - IBM_TTS_URL=${IBM_TTS_URL:-}
+      - IBM_TTS_VOICE=${IBM_TTS_VOICE:-en-US_MichaelV3Voice}
     networks:
       - kadrix-network
 
 volumes:
   creative-videos:
+  media-uploads:
 
 networks:
   kadrix-network:

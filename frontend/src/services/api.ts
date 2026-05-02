@@ -23,6 +23,22 @@ export interface CampaignImproveRequest {
   feedback: string;
 }
 
+export interface RenderPreviewVideoRequest {
+  campaign_id: string;
+  main_hook: string;
+  voiceover_script: string;
+  video_concept: string;
+  storyboard_scenes: StoryboardScene[];
+  mood_direction: string;
+  music_direction: string;
+  visual_style: string;
+  call_to_action: string;
+  source_video_url?: string;
+  source_video_path?: string;
+  source_file_id?: string;
+  require_source_video?: boolean;
+}
+
 // ============================================================================
 // Response Interfaces
 // ============================================================================
@@ -77,10 +93,24 @@ export interface CampaignImproveResponse {
 export interface MediaUploadResponse {
   file_id: string;
   filename: string;
+  file_url: string;
+  internal_file_path: string;
   size_bytes: number;
   format: string;
   transcript: string;
   product_context: string;
+}
+
+export interface RenderPreviewVideoResponse {
+  campaign_id: string;
+  video_url: string;
+  filename: string;
+  duration_seconds: number;
+  status: string;
+  used_source_video: boolean;
+  render_mode: string;  // "source_video" or "fallback_slides"
+  voiceover_enabled: boolean;
+  audio_filename: string | null;
 }
 
 // ============================================================================
@@ -171,8 +201,30 @@ export async function uploadMedia(file: File): Promise<MediaUploadResponse> {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 60000,
+      timeout: 180000,
     });
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+}
+
+/**
+ * Render a blueprint-based preview video from the current campaign.
+ * @param payload Video blueprint payload
+ * @returns Generated preview video metadata and asset URL
+ */
+export async function renderPreviewVideo(
+  payload: RenderPreviewVideoRequest
+): Promise<RenderPreviewVideoResponse> {
+  try {
+    const response = await apiClient.post<RenderPreviewVideoResponse>(
+      '/creative/render-preview-video',
+      payload,
+      {
+        timeout: 120000,
+      }
+    );
     return response.data;
   } catch (error) {
     throw handleApiError(error);

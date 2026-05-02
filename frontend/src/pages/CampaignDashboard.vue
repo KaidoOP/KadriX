@@ -106,7 +106,7 @@
                     <q-icon name="movie" color="primary" />
                   </template>
                   KadriX will use the extracted context to improve the campaign direction.
-                  Recommended max file size: 100MB.
+                  Recommended max file size: 200MB.
                 </q-banner>
 
                 <q-file
@@ -175,6 +175,29 @@
                       </div>
                       <p>{{ mediaPreviewText }}</p>
                     </div>
+
+                    <q-expansion-item
+                      class="media-source-expansion"
+                      icon="source"
+                      label="Source video handoff"
+                      caption="Values sent to the preview renderer"
+                      dense
+                    >
+                      <div class="media-source-debug">
+                        <div>
+                          <span>file_id</span>
+                          <code>{{ mediaUploadResult.file_id }}</code>
+                        </div>
+                        <div>
+                          <span>file_url</span>
+                          <code>{{ mediaUploadResult.file_url }}</code>
+                        </div>
+                        <div>
+                          <span>internal_file_path</span>
+                          <code>{{ mediaUploadResult.internal_file_path }}</code>
+                        </div>
+                      </div>
+                    </q-expansion-item>
                   </q-card-section>
                 </q-card>
               </div>
@@ -374,6 +397,107 @@
                     </q-card-section>
                   </q-card>
                 </q-expansion-item>
+
+                <q-card flat bordered class="preview-asset-card">
+                  <q-card-section>
+                    <div class="preview-asset-header">
+                      <div>
+                        <div class="detail-heading">
+                          <q-icon name="smart_display" color="primary" />
+                          <span>Generated Launch Preview Video</span>
+                        </div>
+                        <p>
+                          Uses uploaded demo footage when available and adds campaign overlays.
+                        </p>
+                      </div>
+
+                      <q-btn
+                        label="Generate Preview Video"
+                        color="primary"
+                        icon="movie_creation"
+                        :loading="isRenderingPreview"
+                        :disable="!hasVideoBlueprint || !hasUploadedMedia || isRenderingPreview"
+                        @click="handleRenderPreviewVideo"
+                      />
+                    </div>
+
+                    <q-linear-progress
+                      v-if="isRenderingPreview"
+                      indeterminate
+                      color="primary"
+                      class="q-mt-md"
+                    />
+
+                    <q-banner
+                      v-if="!hasVideoBlueprint"
+                      rounded
+                      class="blueprint-fallback q-mt-md"
+                    >
+                      <template v-slot:avatar>
+                        <q-icon name="info" color="primary" />
+                      </template>
+                      Generate a campaign with a complete video blueprint before creating a preview asset.
+                    </q-banner>
+
+                    <q-banner
+                      v-else-if="hasUploadedMedia"
+                      rounded
+                      class="source-video-ready q-mt-md"
+                    >
+                      <template v-slot:avatar>
+                        <q-icon name="videocam" color="primary" />
+                      </template>
+                      Uploaded demo footage is attached. The preview renderer will request
+                      <code>{{ mediaUploadResult?.internal_file_path }}</code>.
+                    </q-banner>
+
+                    <q-banner
+                      v-else
+                      rounded
+                      class="blueprint-fallback q-mt-md"
+                    >
+                      <template v-slot:avatar>
+                        <q-icon name="videocam_off" color="grey-7" />
+                      </template>
+                      Upload and analyze a demo video before generating a preview. Source footage is required
+                      so KadriX can create a blueprint-based video preview instead of fallback slides.
+                    </q-banner>
+
+                    <div v-if="previewVideo" class="preview-video-result">
+                      <video
+                        class="preview-video-player"
+                        :src="previewVideoUrl"
+                        controls
+                        preload="metadata"
+                      />
+
+                      <div class="preview-video-meta">
+                        <q-chip color="positive" text-color="white" icon="task_alt">
+                          {{ previewVideo.status }}
+                        </q-chip>
+                        <q-chip
+                          :color="previewVideo.used_source_video ? 'primary' : 'grey-7'"
+                          text-color="white"
+                          :icon="previewVideo.used_source_video ? 'videocam' : 'slideshow'"
+                        >
+                          {{ previewVideo.render_mode === 'source_video' ? 'Source Video' : 'Fallback Slides' }}
+                        </q-chip>
+                        <q-chip
+                          :color="previewVideo.voiceover_enabled ? 'accent' : 'grey-5'"
+                          :text-color="previewVideo.voiceover_enabled ? 'white' : 'grey-8'"
+                          :icon="previewVideo.voiceover_enabled ? 'record_voice_over' : 'voice_over_off'"
+                        >
+                          {{ previewVideo.voiceover_enabled ? 'Voiceover Enabled' : 'No Voiceover' }}
+                        </q-chip>
+                        <span>{{ previewVideo.filename }}</span>
+                        <span>{{ formatDuration(previewVideo.duration_seconds) }}</span>
+                        <a :href="previewVideoUrl" target="_blank" rel="noreferrer">
+                          Open video
+                        </a>
+                      </div>
+                    </div>
+                  </q-card-section>
+                </q-card>
               </div>
 
               <q-separator class="q-my-xl" />
@@ -633,16 +757,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   generateCampaign,
   improveCampaign,
+  renderPreviewVideo,
   uploadMedia,
   type CampaignGenerateRequest,
   type CampaignData,
   type CampaignImproveResponse,
   type MediaUploadResponse,
+  type RenderPreviewVideoRequest,
+  type RenderPreviewVideoResponse,
   type ApiError,
 } from '../services/api';
 
@@ -676,9 +803,12 @@ const improvedCampaign = ref<CampaignImproveResponse | null>(null);
 const isGenerating = ref(false);
 const isImproving = ref(false);
 const isUploadingMedia = ref(false);
+const isRenderingPreview = ref(false);
 const selectedVideoFile = ref<File | null>(null);
 const mediaUploadResult = ref<MediaUploadResponse | null>(null);
-const maxVideoFileSizeBytes = 100 * 1024 * 1024;
+const previewVideo = ref<RenderPreviewVideoResponse | null>(null);
+const maxVideoFileSizeBytes = 200 * 1024 * 1024;
+const mediaUploadStorageKey = 'kadrix:last-media-upload';
 
 // Feedback
 const feedbackText = ref('');
@@ -703,6 +833,51 @@ const mediaPreviewText = computed(() => {
   return text.length > 360 ? `${text.slice(0, 360)}...` : text;
 });
 
+const hasVideoBlueprint = computed(() => {
+  const campaign = currentCampaign.value;
+
+  return Boolean(
+    campaign?.campaign_id &&
+      campaign.main_hook &&
+      campaign.voiceover_script &&
+      campaign.video_concept &&
+      campaign.storyboard_scenes?.length &&
+      campaign.call_to_action
+  );
+});
+
+const previewVideoUrl = computed(() => {
+  const url = previewVideo.value?.video_url || '';
+  return url.startsWith('http') ? url : url;
+});
+
+const hasUploadedMedia = computed(() =>
+  Boolean(
+    mediaUploadResult.value?.file_id &&
+      mediaUploadResult.value.file_url &&
+      mediaUploadResult.value.internal_file_path
+  )
+);
+
+onMounted(() => {
+  const rawStoredUpload = window.sessionStorage.getItem(mediaUploadStorageKey);
+  if (!rawStoredUpload) {
+    return;
+  }
+
+  try {
+    const storedUpload = JSON.parse(rawStoredUpload) as MediaUploadResponse;
+    if (storedUpload.file_id && storedUpload.file_url && storedUpload.internal_file_path) {
+      mediaUploadResult.value = storedUpload;
+      if (!formData.value.video_context) {
+        formData.value.video_context = storedUpload.product_context || storedUpload.transcript;
+      }
+    }
+  } catch {
+    window.sessionStorage.removeItem(mediaUploadStorageKey);
+  }
+});
+
 // Load demo data
 function loadDemoData() {
   formData.value = {
@@ -723,6 +898,7 @@ function loadDemoData() {
 
 function handleVideoFileSelected(file: File | null) {
   mediaUploadResult.value = null;
+  window.sessionStorage.removeItem(mediaUploadStorageKey);
 
   if (!file) {
     return;
@@ -742,7 +918,7 @@ function handleVideoFileSelected(file: File | null) {
     selectedVideoFile.value = null;
     $q.notify({
       type: 'warning',
-      message: 'Please select a video file up to 100MB.',
+      message: 'Please select a video file up to 200MB.',
       position: 'top',
     });
   }
@@ -761,6 +937,10 @@ function formatFileSize(sizeBytes: number) {
   return `${(sizeKb / 1024).toFixed(1)} MB`;
 }
 
+function formatDuration(durationSeconds: number) {
+  return `${durationSeconds.toFixed(1)}s`;
+}
+
 async function handleUploadMedia() {
   if (!selectedVideoFile.value) {
     $q.notify({
@@ -776,6 +956,7 @@ async function handleUploadMedia() {
   try {
     const response = await uploadMedia(selectedVideoFile.value);
     mediaUploadResult.value = response;
+    window.sessionStorage.setItem(mediaUploadStorageKey, JSON.stringify(response));
     formData.value.video_context = response.product_context || response.transcript;
 
     $q.notify({
@@ -800,6 +981,7 @@ async function handleUploadMedia() {
 async function handleGenerateCampaign() {
   isGenerating.value = true;
   improvedCampaign.value = null;
+  previewVideo.value = null;
 
   try {
     const response = await generateCampaign(formData.value);
@@ -820,6 +1002,82 @@ async function handleGenerateCampaign() {
     });
   } finally {
     isGenerating.value = false;
+  }
+}
+
+async function handleRenderPreviewVideo() {
+  if (!currentCampaign.value || !hasVideoBlueprint.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Generate a complete video blueprint before creating a preview video.',
+      position: 'top',
+    });
+    return;
+  }
+
+  if (!hasUploadedMedia.value || !mediaUploadResult.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Analyze an uploaded demo video before generating the preview video.',
+      position: 'top',
+      timeout: 6000,
+    });
+    return;
+  }
+
+  isRenderingPreview.value = true;
+
+  try {
+    const campaign = currentCampaign.value;
+    const payload: RenderPreviewVideoRequest = {
+      campaign_id: campaign.campaign_id,
+      main_hook: campaign.main_hook,
+      voiceover_script: campaign.voiceover_script,
+      video_concept: campaign.video_concept,
+      storyboard_scenes: campaign.storyboard_scenes,
+      mood_direction: campaign.mood_direction,
+      music_direction: campaign.music_direction,
+      visual_style: campaign.visual_style,
+      call_to_action: campaign.call_to_action,
+      require_source_video: true,
+    };
+
+    if (mediaUploadResult.value.file_url) {
+      payload.source_video_url = mediaUploadResult.value.file_url;
+    }
+    if (mediaUploadResult.value.internal_file_path) {
+      payload.source_video_path = mediaUploadResult.value.internal_file_path;
+    }
+    if (mediaUploadResult.value.file_id) {
+      payload.source_file_id = mediaUploadResult.value.file_id;
+    }
+
+    console.info('KadriX preview render payload', {
+      hasUploadedMedia: hasUploadedMedia.value,
+      source_video_url: payload.source_video_url,
+      source_video_path: payload.source_video_path,
+      source_file_id: payload.source_file_id,
+    });
+
+    const response = await renderPreviewVideo(payload);
+
+    previewVideo.value = response;
+
+    $q.notify({
+      type: 'positive',
+      message: 'Preview video generated successfully.',
+      position: 'top',
+    });
+  } catch (error) {
+    const apiError = error as ApiError;
+    $q.notify({
+      type: 'negative',
+      message: `Could not generate preview video: ${apiError.message}`,
+      position: 'top',
+      timeout: 6000,
+    });
+  } finally {
+    isRenderingPreview.value = false;
   }
 }
 
@@ -869,6 +1127,7 @@ function useImprovedVersion() {
   };
 
   improvedCampaign.value = null;
+  previewVideo.value = null;
 
   $q.notify({
     type: 'positive',
@@ -1060,6 +1319,34 @@ function useImprovedVersion() {
   }
 }
 
+.media-source-expansion {
+  margin-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.media-source-debug {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 2px;
+
+  div {
+    display: grid;
+    gap: 3px;
+  }
+
+  span {
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
 .empty-state,
 .loading-state {
   display: flex;
@@ -1230,6 +1517,17 @@ function useImprovedVersion() {
     color: #334155;
   }
 
+  .source-video-ready {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #1f2937;
+
+    code {
+      background: rgba(31, 138, 112, 0.1);
+      color: #166f5b;
+    }
+  }
+
   .voiceover-expansion {
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -1248,6 +1546,72 @@ function useImprovedVersion() {
       font-size: 13px;
       line-height: 1.65;
       white-space: pre-wrap;
+    }
+  }
+
+  .preview-asset-card {
+    margin-top: 16px;
+    border-color: #c8d9d4;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .preview-asset-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+
+    p {
+      margin: 8px 0 0;
+      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .q-btn {
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 760px) {
+      flex-direction: column;
+
+      .q-btn {
+        width: 100%;
+      }
+    }
+  }
+
+  .preview-video-result {
+    margin-top: 16px;
+  }
+
+  .preview-video-player {
+    display: block;
+    width: 100%;
+    max-height: 520px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #111827;
+  }
+
+  .preview-video-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    color: #6b7280;
+    font-size: 13px;
+
+    a {
+      color: #1f8a70;
+      font-weight: 700;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 

@@ -3,13 +3,9 @@ FROM python:3.11-slim
 # Install system dependencies for MoviePy and video processing
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    imagemagick \
     fonts-dejavu-core \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
-
-# Configure ImageMagick policy to allow all operations
-RUN sed -i '/<policy domain="path" rights="none" pattern="@\*"/d' /etc/ImageMagick-6/policy.xml || true
 
 WORKDIR /app
 

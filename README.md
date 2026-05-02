@@ -1,29 +1,29 @@
 # KadriX
 
-KadriX is a Bob-built campaign workflow that turns rough product ideas, text briefs, and demo-video context into a launch-ready marketing direction.
+KadriX is a developer-focused launch workflow platform that helps developers, indie hackers, hackathon teams, and startup builders turn MVP demos or technical walkthroughs into launch-ready product messaging, video ad blueprints, storyboards, and preview assets faster.
 
 The project is built for the **IBM Bob Dev Day Hackathon** under the challenge theme:
 
 > Turn idea into impact faster
 
-KadriX helps founders, solo builders, startups, and product teams move from "we have an idea or demo" to "we know how to talk about it" without needing a full creative agency workflow.
+KadriX bridges the gap between "we built something" and "we know how to talk about it" — without needing a full creative agency workflow.
 
 ---
 
 ## What KadriX Does
 
-KadriX provides a web-based campaign assistant with a WhatsApp-style user experience.
+KadriX provides a developer launch workflow dashboard for transforming technical demos into launch-ready marketing assets.
 
-A user can submit:
+A developer can submit:
 
-- Product idea
+- MVP demo or technical walkthrough
 - Short product description
 - Campaign goal
 - Target audience
 - Desired tone of voice
 - Optional demo-video context or transcript
 
-KadriX then generates a campaign package containing:
+KadriX then generates a launch package containing:
 
 - Product summary
 - Target audience
@@ -39,35 +39,35 @@ KadriX then generates a campaign package containing:
 
 ## Problem
 
-Many small teams already have a product idea, prototype, app demo, or feature concept. The harder part starts when they need to turn that raw material into a clear campaign.
+Many developers, indie hackers, and hackathon teams already have a working MVP, prototype, or technical demo. The harder part starts when they need to turn that technical achievement into clear product messaging for launch.
 
 They still need to answer questions such as:
 
-- What is the product really about?
+- What is the product really about (beyond the tech)?
 - Who is the ideal audience?
 - What is the strongest value proposition?
 - Which campaign angle should be used?
 - Which hooks and ad copies fit the product?
 - How should the message change after feedback?
 
-For small teams, this process is often slow, repetitive, and expensive.
+For developer teams, this process is often slow, unfamiliar, and expensive.
 
 ---
 
 ## Solution
 
-KadriX turns product input into structured campaign output through a simple feedback-driven workflow.
+KadriX turns technical demos into structured launch-ready output through a simple feedback-driven workflow.
 
 ```text
-Raw product idea or demo-video context
+MVP demo or technical walkthrough
   -> product and audience understanding
   -> campaign generation
   -> campaign preview
-  -> user feedback
+  -> developer feedback
   -> improved campaign version
 ```
 
-The goal is to help builders move from idea to usable marketing output faster.
+The goal is to help developers move from working demo to usable launch messaging faster.
 
 ---
 
@@ -77,7 +77,7 @@ The hackathon MVP focuses on a stable and demonstrable proof of concept.
 
 ### Included
 
-- Web-based WhatsApp-style chat interface
+- Campaign workflow dashboard with structured workspace
 - Product brief input
 - Optional demo-video upload flow
 - Mock transcript or sample video context
@@ -85,26 +85,29 @@ The hackathon MVP focuses on a stable and demonstrable proof of concept.
 - Campaign preview
 - Feedback loop
 - Improved campaign version
+- Preview video generation (under validation)
 - Microservice-oriented backend structure
 - IBM Bob session reports in `/bob_sessions`
 
 ### Not Included
 
-- Real WhatsApp Business API integration
 - Real ad publishing
 - Full analytics dashboard
 - Production-grade video editing
 - User authentication
 - Billing
 - Kubernetes deployment
+- IBM watsonx.ai integration (planned future enhancement)
+- IBM Speech-to-Text integration (planned future enhancement)
+- IBM Text-to-Speech integration (planned future enhancement)
 
 ---
 
 ## IBM Bob Usage
 
-IBM Bob is used as the core development partner for this project.
+KadriX was built using **IBM Bob IDE** as the primary documented development partner for this project.
 
-Bob helps with:
+IBM Bob IDE was used interactively throughout development for:
 
 - Planning the MVP scope
 - Designing the microservice-oriented architecture
@@ -112,13 +115,15 @@ Bob helps with:
 - Building the frontend structure
 - Implementing campaign generation logic
 - Implementing the feedback loop
+- Technical review and debugging
+- Creative-service planning and implementation
 - Improving code quality
 - Writing documentation
 - Preparing the hackathon submission
 
-IBM Bob is not required to be the runtime AI inside the final application. Instead, Bob is used as the main development partner to turn the idea into a working proof of concept faster.
+**Important:** IBM Bob was used through the **Bob IDE** as an interactive development partner, not called programmatically through an API. Bob helped accelerate development by providing architecture guidance, code generation, and technical review throughout the project lifecycle.
 
-Relevant exported IBM Bob task session reports and consumption summary screenshots will be stored in:
+Relevant exported IBM Bob task session reports and consumption summary screenshots are stored in:
 
 ```text
 bob_sessions/
@@ -126,29 +131,38 @@ bob_sessions/
 
 ---
 
-## Optional IBM watsonx Usage
+## Planned IBM Service Integrations
 
-KadriX can optionally use IBM watsonx.ai to support campaign generation and campaign improvement.
+KadriX is designed to support optional IBM service integrations as future enhancements:
 
-Possible watsonx.ai use cases:
+### IBM watsonx.ai (Planned)
 
+Possible use cases:
 - Generate campaign strategy
 - Support hook and ad copy creation
 - Support short video script creation
 - Improve campaign output based on feedback
 - Rewrite content for different tones
 
-The MVP can also run with mock or template-based generation if watsonx.ai integration is not completed in time.
+**Status:** Not yet implemented. The MVP uses template-based generation.
 
----
+### IBM Speech-to-Text (Planned)
 
-## Optional Video Understanding
+Possible use cases:
+- Transcribe uploaded demo videos automatically
+- Extract product context from video narration
+- Support multiple languages
 
-KadriX supports the idea that users can provide demo-video context, such as a short app walkthrough or product screen recording.
+**Status:** Not yet implemented. The MVP uses mock transcripts or sample video context.
 
-For the MVP, video understanding can be simulated through a sample transcript or extracted product notes.
+### IBM Text-to-Speech (Planned)
 
-A future enhancement could use IBM Speech-to-Text to transcribe uploaded videos automatically.
+Possible use cases:
+- Generate voiceover for preview videos
+- Support multiple voices and languages
+- Enhance video preview quality
+
+**Status:** Not yet implemented. Preview videos currently use text slides only.
 
 ---
 
@@ -177,22 +191,23 @@ KadriX/
 
 ### Frontend
 
-The frontend provides the user-facing experience.
+The frontend provides the user-facing campaign workflow dashboard.
 
 Responsibilities:
 
-- WhatsApp-style chat interface
+- Campaign workflow dashboard with structured workspace
 - Product brief form
 - Demo-video upload UI
-- Campaign preview
-- Feedback input
-- Version comparison
+- Campaign preview with expandable sections
+- Feedback input with quick suggestions
+- Version comparison with side-by-side layout
 
 Technology:
 
+- Quasar Framework 2.x
 - Vue 3
+- TypeScript
 - Vite
-- Tailwind CSS
 
 ### API Gateway
 
@@ -334,8 +349,12 @@ This project is developed for the IBM Bob Dev Day Hackathon.
 ## Status
 
 ```text
-Initial implementation phase.
+MVP implementation complete. Preview video generation under validation.
 ```
+
+**Note:** The creative-service exists and can generate preview videos, but MoviePy/ImageMagick rendering may require additional validation. A fix was attempted using DejaVu fonts, but rendering success should be verified before claiming full demo readiness.
+
+**Recommended alternative if TextClip fails:** Generate slides with Pillow as PNG images and assemble with MoviePy ImageClip instead of using TextClip with ImageMagick.
 
 ---
 
@@ -343,15 +362,16 @@ Initial implementation phase.
 
 Possible future improvements:
 
-- Real WhatsApp Business API integration
-- Real IBM Speech-to-Text transcription
-- watsonx.ai runtime generation
-- Campaign scoring
+- IBM watsonx.ai integration for intelligent campaign generation
+- IBM Speech-to-Text for automatic video transcription
+- IBM Text-to-Speech for voiceover generation
+- Campaign scoring and analytics
 - Brand voice profiles
 - PDF export
 - Social media export formats
 - Analytics-based campaign improvement
 - Ad platform integrations
+- User authentication and authorization
 
 ---
 
