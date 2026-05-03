@@ -53,6 +53,8 @@ UPLOAD_DIR = Path("/app/uploads")
 # Video dimensions
 VIDEO_WIDTH = 1280
 VIDEO_HEIGHT = 720
+MIN_PREVIEW_DURATION_SECONDS = 0.0
+VOICEOVER_END_PADDING_SECONDS = 1.0
 
 # Environment variables for IBM TTS
 USE_IBM_TTS = os.getenv("USE_IBM_TTS", "false").lower() == "true"
@@ -83,6 +85,8 @@ class RenderPreviewVideoRequest(BaseModel):
     source_video_path: Optional[str] = None
     source_file_id: Optional[str] = None
     require_source_video: bool = False
+    # TTS voice selection
+    tts_voice: Optional[str] = None
 
 
 class RenderPreviewVideoResponse(BaseModel):
@@ -156,9 +160,11 @@ async def render_preview_video(request: RenderPreviewVideoRequest):
         voiceover_enabled = False
         if USE_IBM_TTS and IBM_TTS_AVAILABLE and IBM_TTS_API_KEY:
             try:
-                audio_file = generate_voiceover(request.voiceover_script, video_id)
+                # Use voice from request or fall back to environment variable
+                voice = request.tts_voice or IBM_TTS_VOICE
+                audio_file = generate_voiceover(request.voiceover_script, video_id, voice=voice)
                 voiceover_enabled = True
-                logger.info(f"Generated voiceover audio: {audio_file}")
+                logger.info(f"Generated voiceover audio with voice {voice}: {audio_file}")
             except Exception as e:
                 logger.warning(f"Failed to generate voiceover: {e}")
                 audio_file = None
@@ -169,7 +175,7 @@ async def render_preview_video(request: RenderPreviewVideoRequest):
                 IBM_TTS_AVAILABLE,
                 bool(IBM_TTS_API_KEY),
                 bool(IBM_TTS_URL),
-                IBM_TTS_VOICE,
+                request.tts_voice or IBM_TTS_VOICE,
             )
         
         if used_source_video:
@@ -446,15 +452,25 @@ def render_with_source_video(
     final_video = final_video.without_audio()
     logger.info("Removed original source video audio; preview audio comes only from generated voiceover")
     
-    # Add generated voiceover if available
+    # Add generated voiceover if available. Keep the video close to the
+    # narration length so the preview does not continue with a silent tail.
     if audio_file and audio_file.exists():
         try:
             audio_clip = AudioFileClip(str(audio_file))
-            # Trim or loop audio to match video duration
-            if audio_clip.duration > final_video.duration:
-                audio_clip = audio_clip.subclip(0, final_video.duration)
+            target_video_duration = min(
+                final_video.duration,
+                max(MIN_PREVIEW_DURATION_SECONDS, audio_clip.duration + VOICEOVER_END_PADDING_SECONDS),
+            )
+            if target_video_duration < final_video.duration:
+                final_video = final_video.subclip(0, target_video_duration)
+            if audio_clip.duration > target_video_duration:
+                audio_clip = audio_clip.subclip(0, target_video_duration)
             final_video = final_video.set_audio(audio_clip)
-            logger.info("Added voiceover audio")
+            logger.info(
+                "Added voiceover audio: audio_duration=%.2fs video_duration=%.2fs",
+                audio_clip.duration,
+                final_video.duration,
+            )
         except Exception as e:
             logger.warning(f"Failed to add audio: {e}")
     
@@ -511,26 +527,42 @@ def render_with_slides(
     final_video = concatenate_videoclips(clips, method="compose")
     logger.info(f"Created fallback video with {len(clips)} slides, duration: {final_video.duration:.2f}s")
     
-    # Add audio if available
+    # Add audio if available. Keep fallback slides close to the narration
+    # length so the preview does not continue with a silent tail.
     if audio_file and audio_file.exists():
         try:
             audio_clip = AudioFileClip(str(audio_file))
-            # Trim or loop audio to match video duration
-            if audio_clip.duration > final_video.duration:
-                audio_clip = audio_clip.subclip(0, final_video.duration)
+            target_video_duration = min(
+                final_video.duration,
+                max(MIN_PREVIEW_DURATION_SECONDS, audio_clip.duration + VOICEOVER_END_PADDING_SECONDS),
+            )
+            if target_video_duration < final_video.duration:
+                final_video = final_video.subclip(0, target_video_duration)
+            if audio_clip.duration > target_video_duration:
+                audio_clip = audio_clip.subclip(0, target_video_duration)
             final_video = final_video.set_audio(audio_clip)
-            logger.info("Added voiceover audio to fallback video")
+            logger.info(
+                "Added voiceover audio to fallback video: audio_duration=%.2fs video_duration=%.2fs",
+                audio_clip.duration,
+                final_video.duration,
+            )
         except Exception as e:
             logger.warning(f"Failed to add audio: {e}")
     
     return final_video
 
 
-def generate_voiceover(script: str, video_id: str, target_duration: float = 45.0) -> Optional[Path]:
+def generate_voiceover(script: str, video_id: str, target_duration: float = 45.0, voice: Optional[str] = None) -> Optional[Path]:
     """
     Generate voiceover audio using IBM Watson Text-to-Speech.
     Cleans and shortens text to fit target duration if needed.
     Returns path to generated audio file or None if failed.
+    
+    Args:
+        script: The text to convert to speech
+        video_id: Unique identifier for the video
+        target_duration: Target duration in seconds (default 45.0)
+        voice: IBM Watson TTS voice to use (default: uses IBM_TTS_VOICE env var)
     """
     if not IBM_TTS_AVAILABLE:
         logger.warning("IBM Watson SDK not available")
@@ -539,6 +571,9 @@ def generate_voiceover(script: str, video_id: str, target_duration: float = 45.0
     if not IBM_TTS_API_KEY or not IBM_TTS_URL:
         logger.warning("IBM TTS credentials not configured")
         return None
+    
+    # Use provided voice or fall back to environment variable
+    selected_voice = voice or IBM_TTS_VOICE
     
     try:
         # Clean and prepare script for TTS
@@ -567,17 +602,17 @@ def generate_voiceover(script: str, video_id: str, target_duration: float = 45.0
             cleaned_script = truncated_text
             logger.info(f"Shortened script from {len(words)} to ~{len(cleaned_script.split())} words to fit {target_duration}s")
         
-        logger.info(f"Generating voiceover: {len(cleaned_script)} chars, ~{len(cleaned_script.split())} words")
+        logger.info(f"Generating voiceover with voice '{selected_voice}': {len(cleaned_script)} chars, ~{len(cleaned_script.split())} words")
         
         # Initialize IBM Watson TTS
         authenticator = IAMAuthenticator(IBM_TTS_API_KEY)
         tts = TextToSpeechV1(authenticator=authenticator)
         tts.set_service_url(IBM_TTS_URL)
         
-        # Synthesize speech
+        # Synthesize speech with selected voice
         response = tts.synthesize(
             text=cleaned_script,
-            voice=IBM_TTS_VOICE,
+            voice=selected_voice,
             accept="audio/mp3"
         ).get_result()
         
@@ -588,11 +623,11 @@ def generate_voiceover(script: str, video_id: str, target_duration: float = 45.0
         with open(audio_path, "wb") as audio_file:
             audio_file.write(response.content)
         
-        logger.info(f"Voiceover generated successfully: {audio_path}")
+        logger.info(f"Voiceover generated successfully with voice '{selected_voice}': {audio_path}")
         return audio_path
         
     except Exception as e:
-        logger.error(f"Failed to generate voiceover: {e}", exc_info=True)
+        logger.error(f"Failed to generate voiceover with voice '{selected_voice}': {e}", exc_info=True)
         return None
 
 

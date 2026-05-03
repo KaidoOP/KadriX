@@ -15,6 +15,7 @@ export interface CampaignGenerateRequest {
   target_audience: string;
   tone: string;
   video_context?: string;
+  tts_voice?: string;
 }
 
 export interface CampaignImproveRequest {
@@ -37,6 +38,7 @@ export interface RenderPreviewVideoRequest {
   source_video_path?: string;
   source_file_id?: string;
   require_source_video?: boolean;
+  tts_voice?: string;
 }
 
 // ============================================================================
@@ -77,6 +79,8 @@ export interface CampaignData {
   music_direction: string;
   visual_style: string;
   one_minute_video_plan: string;
+  generation_source?: string;
+  model_id?: string | null;
 }
 
 export interface CampaignGenerateResponse extends CampaignData {}

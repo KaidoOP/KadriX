@@ -26,6 +26,12 @@ services:
     container_name: kadrix-campaign-service
     ports:
       - "8001:8001"
+    environment:
+      - USE_WATSONX=${USE_WATSONX:-false}
+      - WATSONX_API_KEY=${WATSONX_API_KEY:-}
+      - WATSONX_PROJECT_ID=${WATSONX_PROJECT_ID:-}
+      - WATSONX_URL=${WATSONX_URL:-https://us-south.ml.cloud.ibm.com}
+      - WATSONX_MODEL_ID=${WATSONX_MODEL_ID:-ibm/granite-4-h-small}
     networks:
       - kadrix-network
 
@@ -48,6 +54,12 @@ services:
     container_name: kadrix-feedback-service
     ports:
       - "8003:8003"
+    environment:
+      - USE_WATSONX=${USE_WATSONX:-false}
+      - WATSONX_API_KEY=${WATSONX_API_KEY:-}
+      - WATSONX_PROJECT_ID=${WATSONX_PROJECT_ID:-}
+      - WATSONX_URL=${WATSONX_URL:-https://us-south.ml.cloud.ibm.com}
+      - WATSONX_MODEL_ID=${WATSONX_MODEL_ID:-ibm/granite-4-h-small}
     networks:
       - kadrix-network
 

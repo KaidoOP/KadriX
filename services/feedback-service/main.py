@@ -6,8 +6,25 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from datetime import datetime
+import json
+import logging
+import os
+
+try:
+    from ibm_watsonx_ai import Credentials
+    from ibm_watsonx_ai.foundation_models import ModelInference
+    WATSONX_AVAILABLE = True
+except ImportError:
+    WATSONX_AVAILABLE = False
 
 app = FastAPI(title="KadriX Feedback Service", version="1.0.0")
+logger = logging.getLogger(__name__)
+
+USE_WATSONX = os.getenv("USE_WATSONX", "false").lower() == "true"
+WATSONX_API_KEY = os.getenv("WATSONX_API_KEY", "")
+WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")
+WATSONX_URL = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
+WATSONX_MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-4-h-small")
 
 # Request/Response Models
 class FeedbackImproveRequest(BaseModel):
@@ -29,15 +46,23 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "feedback-service",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "watsonx_enabled": is_watsonx_configured(),
+        "watsonx_model_id": WATSONX_MODEL_ID if is_watsonx_configured() else None,
     }
 
 @app.post("/feedback/improve", response_model=ImprovedCampaign)
 async def improve_campaign(request: FeedbackImproveRequest):
     """
     Improve campaign based on user feedback
-    Returns mock improved campaign for hackathon demo
+    Uses IBM watsonx.ai when configured and falls back to deterministic MVP logic.
     """
+    if is_watsonx_configured():
+        try:
+            return improve_campaign_with_watsonx(request)
+        except Exception as exc:
+            logger.warning("watsonx feedback improvement failed; using template fallback: %s", exc)
+
     # Extract original campaign data
     original = request.original_campaign
     
@@ -127,6 +152,106 @@ async def improve_campaign(request: FeedbackImproveRequest):
     )
     
     return response
+
+
+def is_watsonx_configured() -> bool:
+    return bool(USE_WATSONX and WATSONX_AVAILABLE and WATSONX_API_KEY and WATSONX_PROJECT_ID)
+
+
+def improve_campaign_with_watsonx(request: FeedbackImproveRequest) -> ImprovedCampaign:
+    model = ModelInference(
+        model_id=WATSONX_MODEL_ID,
+        credentials=Credentials(api_key=WATSONX_API_KEY, url=WATSONX_URL),
+        project_id=WATSONX_PROJECT_ID,
+        params={
+            "decoding_method": "sample",
+            "temperature": 0.45,
+            "top_p": 0.85,
+            "max_new_tokens": 1800,
+            "min_new_tokens": 400,
+        },
+    )
+
+    raw_text = model.generate_text(prompt=build_watsonx_feedback_prompt(request))
+    parsed = parse_json_object(raw_text)
+    improved = parsed.get("improved", {})
+    changes = parsed.get("changes", [])
+
+    if not isinstance(improved, dict):
+        raise ValueError("watsonx response did not include an improved campaign object")
+    if not isinstance(changes, list):
+        changes = ["Improved campaign using IBM watsonx.ai based on user feedback"]
+
+    merged = request.original_campaign.copy()
+    merged.update(improved)
+    merged["generation_source"] = "watsonx.ai"
+    merged["model_id"] = WATSONX_MODEL_ID
+
+    return ImprovedCampaign(
+        campaign_id=request.campaign_id,
+        version=int(request.original_campaign.get("version", 1)) + 1,
+        generated_at=datetime.utcnow().isoformat(),
+        original=request.original_campaign,
+        improved=merged,
+        changes=[str(change) for change in changes[:8]],
+    )
+
+
+def build_watsonx_feedback_prompt(request: FeedbackImproveRequest) -> str:
+    original_json = json.dumps(request.original_campaign, ensure_ascii=False)
+    return f"""
+You are KadriX, an IBM hackathon launch strategist. Improve this campaign using the user's feedback.
+Return strict JSON only. No markdown. No explanation.
+
+User feedback: {request.feedback}
+Original campaign JSON: {original_json}
+
+Return this JSON shape:
+{{
+  "improved": {{
+    "product_summary": "string",
+    "target_audience": "string",
+    "campaign_angle": "string",
+    "value_proposition": "string",
+    "marketing_hooks": ["string", "string", "string", "string"],
+    "ad_copy_variants": [
+      {{"platform": "LinkedIn", "headline": "string", "body": "string", "character_count": 0}},
+      {{"platform": "Instagram", "headline": "string", "body": "string", "character_count": 0}},
+      {{"platform": "YouTube Shorts", "headline": "string", "body": "string", "character_count": 0}}
+    ],
+    "call_to_action": "string",
+    "video_script": "string",
+    "main_hook": "string",
+    "voiceover_script": "string",
+    "video_concept": "string",
+    "storyboard_scenes": [],
+    "mood_direction": "string",
+    "music_direction": "string",
+    "visual_style": "string",
+    "one_minute_video_plan": "string"
+  }},
+  "changes": ["short explanation of a concrete improvement"]
+}}
+
+Keep the structure compatible with the original campaign. Make the improvement visible and demo-ready.
+"""
+
+
+def parse_json_object(raw_text: str) -> dict:
+    text = raw_text.strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        text = text.replace("json\n", "", 1).replace("JSON\n", "", 1)
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("watsonx response did not contain a JSON object")
+
+    parsed = json.loads(text[start : end + 1])
+    if not isinstance(parsed, dict):
+        raise ValueError("watsonx response JSON was not an object")
+    return parsed
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,380 +1,514 @@
 # KadriX
 
-KadriX is a developer-focused launch workflow platform that helps developers, indie hackers, hackathon teams, and startup builders turn MVP demos or technical walkthroughs into launch-ready product messaging, video ad blueprints, storyboards, and preview assets faster.
+**Developer-focused launch workflow platform for the IBM Bob Dev Day Hackathon**
 
-The project is built for the **IBM Bob Dev Day Hackathon** under the challenge theme:
-
-> Turn idea into impact faster
-
-KadriX bridges the gap between "we built something" and "we know how to talk about it" — without needing a full creative agency workflow.
+KadriX helps developers, indie hackers, hackathon teams, and technical founders turn MVP demos or technical walkthroughs into launch-ready product messaging, storyboards, voiceover scripts, and generated preview assets faster.
 
 ---
 
-## What KadriX Does
+## Hackathon Alignment
 
-KadriX provides a developer launch workflow dashboard for transforming technical demos into launch-ready marketing assets.
+**IBM Bob Dev Day Hackathon**  
+**Theme:** "Turn idea into impact faster with IBM Bob"
 
-A developer can submit:
-
-- MVP demo or technical walkthrough
-- Short product description
-- Campaign goal
-- Target audience
-- Desired tone of voice
-- Optional demo-video context or transcript
-
-KadriX then generates a launch package containing:
-
-- Product summary
-- Target audience
-- Campaign angle
-- Key value proposition
-- Marketing hooks
-- Ad copy variants
-- Call to action
-- Short video ad script
-- Improved campaign version based on user feedback
+KadriX addresses a critical post-build challenge: developers can build MVPs quickly, but transforming technical demos into launch-ready marketing assets (messaging, campaign angle, storyboard, preview video, voiceover) is slow and unfamiliar work. KadriX accelerates this workflow by generating structured launch assets from product details and demo footage, helping software builders move from working prototype to launch-ready presentation faster.
 
 ---
 
-## Problem
+## Problem Statement
 
 Many developers, indie hackers, and hackathon teams already have a working MVP, prototype, or technical demo. The harder part starts when they need to turn that technical achievement into clear product messaging for launch.
 
-They still need to answer questions such as:
+**Post-build launch work is slow:**
+- Defining product messaging and value proposition
+- Identifying the right campaign angle and target audience
+- Creating marketing hooks and ad copy variants
+- Developing a storyboard for a launch video
+- Writing voiceover scripts
+- Generating preview video assets
+- Iterating based on feedback
 
-- What is the product really about (beyond the tech)?
-- Who is the ideal audience?
-- What is the strongest value proposition?
-- Which campaign angle should be used?
-- Which hooks and ad copies fit the product?
-- How should the message change after feedback?
-
-For developer teams, this process is often slow, unfamiliar, and expensive.
+For solo developers, indie hackers, hackathon teams, and small startup teams, this process is often slow, unfamiliar, and expensive.
 
 ---
 
 ## Solution
 
-KadriX turns technical demos into structured launch-ready output through a simple feedback-driven workflow.
+KadriX provides a structured workflow that transforms technical demos into launch-ready output:
 
-```text
-MVP demo or technical walkthrough
-  -> product and audience understanding
-  -> campaign generation
-  -> campaign preview
-  -> developer feedback
-  -> improved campaign version
-```
-
-The goal is to help developers move from working demo to usable launch messaging faster.
-
----
-
-## MVP Scope
-
-The hackathon MVP focuses on a stable and demonstrable proof of concept.
-
-### Included
-
-- Campaign workflow dashboard with structured workspace
-- Product brief input
-- Optional demo-video upload flow
-- Mock transcript or sample video context
-- Campaign generation
-- Campaign preview
-- Feedback loop
-- Improved campaign version
-- Preview video generation (under validation)
-- Microservice-oriented backend structure
-- IBM Bob session reports in `/bob_sessions`
-
-### Not Included
-
-- Real ad publishing
-- Full analytics dashboard
-- Production-grade video editing
-- User authentication
-- Billing
-- Kubernetes deployment
-- IBM watsonx.ai integration (planned future enhancement)
-- IBM Speech-to-Text integration (planned future enhancement)
-- IBM Text-to-Speech integration (planned future enhancement)
+1. **User enters product/MVP details** (product idea, description, campaign goal, target audience, tone)
+2. **User uploads demo video or technical walkthrough** (optional)
+3. **KadriX generates comprehensive launch assets:**
+   - Product summary and target audience analysis
+   - Campaign angle and value proposition
+   - Marketing hooks (4 variants)
+   - Ad copy variants (LinkedIn, Instagram, YouTube Shorts)
+   - Call to action
+   - Video Ad Blueprint with storyboard (6 scenes with timestamps, visual direction, narration)
+   - Voiceover script with mood/music/visual direction
+   - One-minute video plan
+4. **KadriX generates preview launch video** using uploaded demo footage when available
+5. **IBM Watson Text-to-Speech generates voiceover** (when credentials configured)
+6. **User provides feedback** to improve the campaign
+7. **KadriX generates improved version** with side-by-side comparison
 
 ---
 
-## IBM Bob Usage
+## Key Features
 
-KadriX was built using **IBM Bob IDE** as the primary documented development partner for this project.
+**Implemented in this hackathon proof of concept:**
 
-IBM Bob IDE was used interactively throughout development for:
-
-- Planning the MVP scope
-- Designing the microservice-oriented architecture
-- Creating backend services
-- Building the frontend structure
-- Implementing campaign generation logic
-- Implementing the feedback loop
-- Technical review and debugging
-- Creative-service planning and implementation
-- Improving code quality
-- Writing documentation
-- Preparing the hackathon submission
-
-**Important:** IBM Bob was used through the **Bob IDE** as an interactive development partner, not called programmatically through an API. Bob helped accelerate development by providing architecture guidance, code generation, and technical review throughout the project lifecycle.
-
-Relevant exported IBM Bob task session reports and consumption summary screenshots are stored in:
-
-```text
-bob_sessions/
-```
-
----
-
-## Planned IBM Service Integrations
-
-KadriX is designed to support optional IBM service integrations as future enhancements:
-
-### IBM watsonx.ai (Planned)
-
-Possible use cases:
-- Generate campaign strategy
-- Support hook and ad copy creation
-- Support short video script creation
-- Improve campaign output based on feedback
-- Rewrite content for different tones
-
-**Status:** Not yet implemented. The MVP uses template-based generation.
-
-### IBM Speech-to-Text (Planned)
-
-Possible use cases:
-- Transcribe uploaded demo videos automatically
-- Extract product context from video narration
-- Support multiple languages
-
-**Status:** Not yet implemented. The MVP uses mock transcripts or sample video context.
-
-### IBM Text-to-Speech (Planned)
-
-Possible use cases:
-- Generate voiceover for preview videos
-- Support multiple voices and languages
-- Enhance video preview quality
-
-**Status:** Not yet implemented. Preview videos currently use text slides only.
+- ✅ Product/MVP input form with structured fields
+- ✅ Demo video upload (up to 200MB)
+- ✅ Campaign generation with comprehensive Video Ad Blueprint
+- ✅ Storyboard with 6 timestamped scenes (visual direction + narration)
+- ✅ Voiceover script with tone-specific direction
+- ✅ Marketing hooks and ad copy variants for multiple platforms
+- ✅ Preview video generation from uploaded demo footage
+- ✅ Fallback to text slide generation when no demo video available
+- ✅ IBM Watson Text-to-Speech voiceover integration (optional)
+- ✅ Multiple voice actor options (Michael, Allison, Lisa, Henry, Kevin, Olivia)
+- ✅ Feedback improvement flow with version comparison
+- ✅ Optional IBM watsonx.ai integration for campaign generation (with template fallback)
+- ✅ Microservice architecture with Docker Compose
+- ✅ Documented Bob IDE development sessions in `/bob_sessions`
 
 ---
 
 ## Architecture
 
-KadriX is structured as a microservice-oriented monorepo.
+KadriX is structured as a microservice-oriented monorepo with a Vue 3 frontend and Python FastAPI backend services.
 
-```text
-KadriX/
-  frontend/
-  services/
-    api-gateway/
-    campaign-service/
-    media-service/
-    feedback-service/
-  shared/
-  docs/
-  demo/
-  bob_sessions/
-  README.md
+```mermaid
+graph TB
+    subgraph Frontend
+        UI[Vue 3 + Quasar<br/>Campaign Dashboard]
+    end
+    
+    subgraph Backend Services
+        GW[API Gateway<br/>Port 8000]
+        CS[Campaign Service<br/>Port 8001]
+        MS[Media Service<br/>Port 8002]
+        FS[Feedback Service<br/>Port 8003]
+        CR[Creative Service<br/>Port 8004]
+    end
+    
+    subgraph IBM Services
+        TTS[IBM Watson<br/>Text-to-Speech]
+        WX[IBM watsonx.ai<br/>Optional]
+    end
+    
+    UI -->|HTTP| GW
+    GW -->|Campaign Generation| CS
+    GW -->|Video Upload| MS
+    GW -->|Feedback Improvement| FS
+    GW -->|Preview Video Render| CR
+    
+    CS -.->|Optional| WX
+    FS -.->|Optional| WX
+    CR -->|Voiceover| TTS
+    CR -->|Read Demo Video| MS
+    
+    style TTS fill:#1f8a70
+    style WX fill:#1f8a70
+    style UI fill:#0f62fe
+    style GW fill:#0f62fe
+```
+
+### Service Responsibilities
+
+**Frontend (Quasar + Vue 3 + TypeScript + Vite)**
+- Campaign workflow dashboard with structured workspace
+- Product brief form with validation
+- Demo video upload UI
+- Campaign preview with expandable sections
+- Video Ad Blueprint display
+- Preview video player
+- Feedback input with quick suggestions
+- Version comparison with side-by-side layout
+
+**API Gateway (FastAPI)**
+- Central entry point for all frontend requests
+- Routes requests to internal services
+- Handles CORS for local development
+- Proxies video assets with HTTP Range support for seeking
+
+**Campaign Service (FastAPI)**
+- Processes product brief and optional video context
+- Generates comprehensive campaign blueprint
+- Creates Video Ad Blueprint with storyboard
+- Optional IBM watsonx.ai integration with template fallback
+- Returns structured campaign data (product summary, hooks, ad copy, storyboard, voiceover script)
+
+**Media Service (FastAPI)**
+- Accepts uploaded video files (up to 200MB)
+- Stores video files to persistent volume
+- Returns mock transcript and product context (Speech-to-Text is roadmap)
+- Serves uploaded videos with HTTP Range support
+
+**Feedback Service (FastAPI)**
+- Accepts original campaign and user feedback
+- Generates improved campaign version
+- Optional IBM watsonx.ai integration with template fallback
+- Returns version comparison data
+
+**Creative Service (FastAPI)**
+- Generates preview launch videos from campaign blueprints
+- Uses uploaded demo footage when available (source_video mode)
+- Falls back to text slides when no demo video (fallback_slides mode)
+- Integrates IBM Watson Text-to-Speech for voiceover
+- Supports multiple voice actors
+- Outputs MP4 videos with audio
+
+---
+
+## Technology Stack
+
+**Frontend:**
+- Quasar Framework 2.x
+- Vue 3 with Composition API
+- TypeScript
+- Vite
+- Axios
+
+**Backend:**
+- Python 3.11+
+- FastAPI
+- Pydantic for data validation
+- httpx for service-to-service communication
+
+**Infrastructure:**
+- Docker & Docker Compose
+- Persistent volumes for media and video storage
+
+**Video Processing:**
+- MoviePy for video editing and composition
+- Pillow (PIL) for image generation
+- FFmpeg (via MoviePy)
+
+**IBM Services:**
+- **IBM Bob IDE** - Primary development partner (used throughout project)
+- **IBM Watson Text-to-Speech** - Voiceover generation (optional, configured via .env)
+- **IBM watsonx.ai** - Campaign generation and feedback improvement (optional, configured via .env)
+
+---
+
+## IBM Bob Usage
+
+**KadriX was built using IBM Bob IDE as the primary documented development partner.**
+
+IBM Bob was used through the **Bob IDE** as an interactive development assistant throughout the entire project lifecycle. Bob helped accelerate development by providing:
+
+- Architecture planning and microservice design
+- Backend service implementation (FastAPI, Docker)
+- Frontend workflow development (Quasar, Vue 3)
+- Creative service video generation logic
+- IBM Watson Text-to-Speech integration
+- Docker Compose orchestration
+- Debugging and technical review
+- Code quality improvements
+- Documentation and README updates
+- Final hackathon submission preparation
+
+**Important:** IBM Bob was used through the **Bob IDE** as an interactive development partner, not called programmatically through a REST API. KadriX does not make runtime API calls to IBM Bob.
+
+### Bob Session Evidence
+
+Exported IBM Bob task session reports and consumption summary screenshots are stored in:
+
+```
+bob_sessions/
+├── 01_architecture_plan.md
+├── 02_backend_microservices_docker.md
+├── 03_quasar_frontend_core_flow.md
+├── 04_campaign_video_blueprint_review.md
+├── 05_creative_service_preview_video_generation.md
+├── 06_architecture_diagram_and_next_steps.md
+├── 07_updated_readMe_and_project_idea.md
+├── 08_creative_service_render_fix.md
+├── 09_demo_clip_remix_and_voiceover_video.md
+├── 10_ad_style_video_renderer_fix.md
+├── 11_ibm_tts_voiceover_integration.md
+└── [screenshots for each session]
 ```
 
 ---
 
-## Services
+## Optional IBM Runtime Services
 
-### Frontend
+### IBM Watson Text-to-Speech (Implemented)
 
-The frontend provides the user-facing campaign workflow dashboard.
+**Status:** ✅ Implemented and working when credentials are configured
 
-Responsibilities:
+KadriX uses IBM Watson Text-to-Speech to generate voiceover audio for preview videos. The creative-service integrates with IBM TTS to convert the campaign voiceover script into spoken narration.
 
-- Campaign workflow dashboard with structured workspace
-- Product brief form
-- Demo-video upload UI
-- Campaign preview with expandable sections
-- Feedback input with quick suggestions
-- Version comparison with side-by-side layout
+**Features:**
+- Multiple voice actor options (Michael, Allison, Lisa, Henry, Kevin, Olivia)
+- Automatic script cleaning and duration fitting
+- MP3 audio generation
+- Audio attachment to generated MP4 videos
+- Graceful fallback to silent video if TTS fails
 
-Technology:
+**Configuration:** Set `USE_IBM_TTS=true` and provide IBM TTS credentials in `.env`
 
-- Quasar Framework 2.x
-- Vue 3
-- TypeScript
-- Vite
+### IBM watsonx.ai (Implemented)
 
-### API Gateway
+**Status:** ✅ Implemented with template fallback for demo stability
 
-The API Gateway is the central entry point for the frontend.
+KadriX can optionally use IBM watsonx.ai (Granite models) for campaign generation and feedback improvement. When configured, the campaign-service and feedback-service use watsonx.ai to generate more dynamic and contextual campaign content.
 
-Responsibilities:
+**Features:**
+- Campaign blueprint generation using Granite models
+- Feedback-based campaign improvement
+- Automatic fallback to deterministic templates if watsonx.ai is unavailable or fails
+- Ensures demo stability regardless of API availability
 
-- Receive frontend requests
-- Route requests to internal services
-- Expose a clean public API
-- Handle CORS
-- Normalize responses
+**Configuration:** Set `USE_WATSONX=true` and provide watsonx.ai credentials in `.env`
 
-Technology:
+### IBM Speech-to-Text (Roadmap)
 
-- Python
-- FastAPI
+**Status:** 🔄 Planned future enhancement
 
-Planned endpoints:
+Currently, the media-service returns mock transcripts for uploaded demo videos. Future integration with IBM Speech-to-Text would enable:
+- Automatic video transcription
+- Product context extraction from narration
+- Multi-language support
 
-```text
-GET  /health
-POST /api/campaigns/generate
-POST /api/campaigns/improve
-POST /api/media/upload
+---
+
+## Setup Instructions
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Node.js 18+ and npm (for frontend development)
+
+### Backend Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd KadriX
+   ```
+
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and configure optional IBM services:
+   - For IBM Watson TTS: Set `USE_IBM_TTS=true` and add your credentials
+   - For IBM watsonx.ai: Set `USE_WATSONX=true` and add your credentials
+   
+   **⚠️ IMPORTANT:** Never commit `.env` with real credentials. Keep it local only.
+
+3. **Build and start backend services**
+   ```bash
+   docker compose build
+   docker compose up -d
+   ```
+
+4. **Verify services are running**
+   ```bash
+   docker compose ps
+   ```
+   
+   All services should show as "Up":
+   - api-gateway (port 8000)
+   - campaign-service (port 8001)
+   - media-service (port 8002)
+   - feedback-service (port 8003)
+   - creative-service (port 8004)
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open browser**
+   ```
+   http://localhost:5173
+   ```
+
+---
+
+## Environment Variables
+
+Configure these in your `.env` file (copy from `.env.example`):
+
+### Service URLs (Docker internal)
+```bash
+CAMPAIGN_SERVICE_URL=http://campaign-service:8001
+MEDIA_SERVICE_URL=http://media-service:8002
+FEEDBACK_SERVICE_URL=http://feedback-service:8003
+CREATIVE_SERVICE_URL=http://creative-service:8004
 ```
 
-### Campaign Service
-
-The Campaign Service creates the first campaign version.
-
-Responsibilities:
-
-- Process product brief or transcript context
-- Generate product summary
-- Generate campaign angle
-- Generate hooks
-- Generate ad copy variants
-- Generate CTA
-- Generate short video ad script
-
-Technology:
-
-- Python
-- FastAPI
-
-Planned endpoints:
-
-```text
-GET  /health
-POST /campaigns/generate
+### IBM Watson Text-to-Speech (Optional)
+```bash
+USE_IBM_TTS=false
+IBM_TTS_API_KEY=your_api_key_here
+IBM_TTS_URL=your_service_url_here
+IBM_TTS_VOICE=en-US_MichaelV3Voice
 ```
 
-### Media Service
-
-The Media Service handles demo-video input.
-
-Responsibilities:
-
-- Accept uploaded video files
-- Store basic metadata
-- Return mock transcript or sample video context
-- Prepare future Speech-to-Text integration
-
-Technology:
-
-- Python
-- FastAPI
-
-Planned endpoints:
-
-```text
-GET  /health
-POST /media/upload
-POST /media/transcribe
+### IBM watsonx.ai (Optional)
+```bash
+USE_WATSONX=false
+WATSONX_API_KEY=your_api_key_here
+WATSONX_PROJECT_ID=your_project_id_here
+WATSONX_URL=https://us-south.ml.cloud.ibm.com
+WATSONX_MODEL_ID=ibm/granite-4-h-small
 ```
 
-### Feedback Service
-
-The Feedback Service creates an improved campaign version.
-
-Responsibilities:
-
-- Accept original campaign output
-- Accept user feedback
-- Generate improved campaign version
-- Return version comparison data
-
-Technology:
-
-- Python
-- FastAPI
-
-Planned endpoints:
-
-```text
-GET  /health
-POST /feedback/improve
-```
+**⚠️ SECURITY:** Real API keys and credentials must stay in your local `.env` file and must never be committed to version control. The `.gitignore` file is configured to exclude `.env`.
 
 ---
 
 ## Demo Flow
 
-The planned 3-minute demo flow:
+**Recommended 3-minute demo flow:**
 
-1. Open KadriX.
-2. Enter a product idea or upload demo-video context.
-3. KadriX extracts the relevant product and campaign context.
-4. Generate the first campaign draft.
-5. Review the campaign preview in the dashboard.
-6. Enter feedback.
-7. Generate an improved second version.
-8. Show the version comparison.
-9. Briefly show how IBM Bob was used during development and where the exported Bob session reports are stored.
+1. **Open KadriX Campaign Dashboard** (`http://localhost:5173`)
+
+2. **Load sample product details** (or use LaunchBoard as example):
+   - Product Idea: "LaunchBoard"
+   - Description: "A developer-focused launch workflow platform that helps indie hackers turn MVP demos into launch-ready marketing campaigns"
+   - Campaign Goal: "Drive early adopter signups"
+   - Target Audience: "Indie hackers and solo developers"
+   - Tone: "Professional"
+   - TTS Voice: "Michael (US Male)"
+
+3. **Upload demo video** (LaunchBoard demo or any product walkthrough)
+
+4. **Generate campaign** - Show the comprehensive Video Ad Blueprint:
+   - Product summary and target audience
+   - Campaign angle and value proposition
+   - Marketing hooks (4 variants)
+   - Ad copy variants (LinkedIn, Instagram, YouTube Shorts)
+   - Storyboard with 6 timestamped scenes
+   - Voiceover script with mood/music/visual direction
+
+5. **Generate preview video** - Show the video generation process:
+   - Uses uploaded demo footage
+   - Adds overlays and text
+   - Generates IBM Watson TTS voiceover
+   - Creates 45-60 second launch preview
+
+6. **Play generated preview** - Demonstrate the final output with voiceover
+
+7. **Improve campaign with feedback** - Enter feedback like:
+   - "Make it more casual and friendly"
+   - "Focus on younger developers"
+   - "Add more urgency to the call-to-action"
+
+8. **Show version comparison** - Display side-by-side original vs improved
+
+9. **Show Bob sessions** - Briefly show `/bob_sessions` folder with exported task histories
 
 ---
 
 ## Hackathon Deliverables
 
-The final submission will include:
+### Required Submissions
 
-- Public demo video URL
-- Written problem and solution statement
-- Written IBM Bob usage statement
-- Public repository URL
-- Exported IBM Bob session reports in `/bob_sessions`
+1. **Demo Video URL**
+   - [ ] TODO: Add final demo video URL here after recording
+
+2. **Problem and Solution Statement**
+   - ✅ Documented in this README (see Problem Statement and Solution sections)
+
+3. **IBM Bob Usage Statement**
+   - ✅ Documented in this README (see IBM Bob Usage section)
+   - ✅ Exported Bob sessions in `/bob_sessions` folder
+
+4. **Public Repository URL**
+   - [ ] TODO: Add public repository URL here
+
+5. **Bob Session Evidence**
+   - ✅ 11 exported Bob session markdown files in `/bob_sessions`
+   - ✅ Screenshots for each session showing task consumption
 
 ---
 
-## Team
+## Current Limitations / Roadmap
 
-**Team name:** KadriX
+**This is a hackathon proof of concept.** The following limitations and future enhancements are acknowledged:
 
-This project is developed for the IBM Bob Dev Day Hackathon.
+### Current Limitations
+
+- Generated preview video is a launch preview asset, not a final production advertisement
+- Mock transcripts used instead of real Speech-to-Text (IBM STT is roadmap)
+- No user authentication or multi-user support
+- No persistent database (campaigns are session-based)
+- No social media publishing integrations
+- No analytics or campaign performance tracking
+- Video editing capabilities are basic (overlays and composition)
+
+### Future Enhancements
+
+- **IBM Speech-to-Text integration** for automatic demo video transcription
+- **Deeper watsonx.ai orchestration** for campaign scoring, variant generation, and brand voice profiles
+- **Social media publishing** (LinkedIn, Instagram, YouTube, TikTok)
+- **Campaign analytics** and performance tracking
+- **Advanced video editing** with transitions, effects, and professional templates
+- **Brand voice profiles** for consistent messaging across campaigns
+- **PDF export** for campaign blueprints
+- **User authentication** and team collaboration
+- **Campaign versioning** and history
+- **A/B testing** for campaign variants
 
 ---
 
-## Status
+## Project Structure
 
-```text
-MVP implementation complete. Preview video generation under validation.
 ```
-
-**Note:** The creative-service exists and can generate preview videos, but MoviePy/ImageMagick rendering may require additional validation. A fix was attempted using DejaVu fonts, but rendering success should be verified before claiming full demo readiness.
-
-**Recommended alternative if TextClip fails:** Generate slides with Pillow as PNG images and assemble with MoviePy ImageClip instead of using TextClip with ImageMagick.
-
----
-
-## Future Improvements
-
-Possible future improvements:
-
-- IBM watsonx.ai integration for intelligent campaign generation
-- IBM Speech-to-Text for automatic video transcription
-- IBM Text-to-Speech for voiceover generation
-- Campaign scoring and analytics
-- Brand voice profiles
-- PDF export
-- Social media export formats
-- Analytics-based campaign improvement
-- Ad platform integrations
-- User authentication and authorization
+KadriX/
+├── frontend/                 # Vue 3 + Quasar frontend
+│   ├── src/
+│   │   ├── pages/           # Campaign Dashboard, Home
+│   │   ├── services/        # API client
+│   │   └── router/          # Vue Router config
+│   └── package.json
+├── services/
+│   ├── api-gateway/         # FastAPI gateway (port 8000)
+│   ├── campaign-service/    # Campaign generation (port 8001)
+│   ├── media-service/       # Video upload (port 8002)
+│   ├── feedback-service/    # Campaign improvement (port 8003)
+│   └── creative-service/    # Video generation (port 8004)
+├── bob_sessions/            # Exported Bob IDE task histories
+├── docs/                    # Architecture and implementation docs
+├── docker-compose.yml       # Service orchestration
+├── .env.example            # Environment variable template
+└── README.md               # This file
+```
 
 ---
 
 ## License
 
-This project is a hackathon proof of concept. License details may be added later.
+This project is a hackathon proof of concept built for the IBM Bob Dev Day Hackathon. License details may be added later.
+
+---
+
+## Acknowledgments
+
+Built with **IBM Bob IDE** as the primary development partner for the **IBM Bob Dev Day Hackathon**.
+
+Special thanks to the IBM Bob team for creating an AI-powered development assistant that accelerated this project from concept to working prototype.
+
+---
+
+**Made with Bob** 🤖

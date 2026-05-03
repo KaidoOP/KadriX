@@ -82,6 +82,24 @@
                 class="q-mb-md"
               />
 
+              <q-select
+                v-model="formData.tts_voice"
+                label="TTS Voice Actor *"
+                :options="ttsVoiceOptions"
+                outlined
+                dense
+                :rules="[val => !!val || 'TTS voice is required']"
+                class="q-mb-md"
+                option-value="value"
+                option-label="label"
+                emit-value
+                map-options
+              >
+                <template v-slot:prepend>
+                  <q-icon name="record_voice_over" />
+                </template>
+              </q-select>
+
               <div class="demo-video-section q-mb-md">
                 <div class="demo-video-section__header">
                   <div>
@@ -244,6 +262,11 @@
                 :label="`Version ${currentCampaign.version}`"
                 color="primary"
               />
+              <q-badge
+                v-if="currentCampaign?.generation_source"
+                :label="generationSourceLabel"
+                :color="currentCampaign.generation_source === 'watsonx.ai' ? 'positive' : 'grey-7'"
+              />
             </div>
             <p class="text-caption text-grey-7">
               Your generated marketing campaign content
@@ -267,7 +290,7 @@
               <q-spinner-dots size="64px" color="primary" />
               <p class="text-h6 q-mt-md">Generating Campaign...</p>
               <p class="text-body2 text-grey-7">
-                AI is crafting your marketing strategy
+                KadriX is crafting your marketing strategy
               </p>
             </div>
 
@@ -277,7 +300,13 @@
               <div class="video-blueprint">
                 <div class="blueprint-header">
                   <div>
-                    <q-badge color="primary" label="Video Ad Blueprint" />
+                    
+                    <q-badge
+                      v-if="currentCampaign.generation_source === 'watsonx.ai'"
+                      color="positive"
+                      label="IBM watsonx.ai"
+                      class="q-ml-sm"
+                    />
                     <h2>60-Second Video Ad Blueprint</h2>
                     <p>
                       Demo-led campaign direction for storyboard, voiceover, production mood, and
@@ -447,8 +476,7 @@
                       <template v-slot:avatar>
                         <q-icon name="videocam" color="primary" />
                       </template>
-                      Uploaded demo footage is attached. The preview renderer will request
-                      <code>{{ mediaUploadResult?.internal_file_path }}</code>.
+                      Uploaded demo footage is attached. The preview renderer will request.
                     </q-banner>
 
                     <q-banner
@@ -471,29 +499,31 @@
                         preload="metadata"
                       />
 
-                      <div class="preview-video-meta">
-                        <q-chip color="positive" text-color="white" icon="task_alt">
-                          {{ previewVideo.status }}
-                        </q-chip>
-                        <q-chip
-                          :color="previewVideo.used_source_video ? 'primary' : 'grey-7'"
-                          text-color="white"
-                          :icon="previewVideo.used_source_video ? 'videocam' : 'slideshow'"
-                        >
-                          {{ previewVideo.render_mode === 'source_video' ? 'Source Video' : 'Fallback Slides' }}
-                        </q-chip>
-                        <q-chip
-                          :color="previewVideo.voiceover_enabled ? 'accent' : 'grey-5'"
-                          :text-color="previewVideo.voiceover_enabled ? 'white' : 'grey-8'"
-                          :icon="previewVideo.voiceover_enabled ? 'record_voice_over' : 'voice_over_off'"
-                        >
-                          {{ previewVideo.voiceover_enabled ? 'Voiceover Enabled' : 'No Voiceover' }}
-                        </q-chip>
-                        <span>{{ previewVideo.filename }}</span>
-                        <span>{{ formatDuration(previewVideo.duration_seconds) }}</span>
-                        <a :href="previewVideoUrl" target="_blank" rel="noreferrer">
-                          Open video
-                        </a>
+                      <div class="preview-upload-actions">
+                        <q-btn
+                          class="preview-upload-button preview-upload-button--youtube"
+                          icon="smart_display"
+                          label="Upload to YouTube"
+                          no-caps
+                          unelevated
+                          disable
+                        />
+                        <q-btn
+                          class="preview-upload-button preview-upload-button--tiktok"
+                          icon="music_video"
+                          label="Upload to TikTok"
+                          no-caps
+                          unelevated
+                          disable
+                        />
+                        <q-btn
+                          class="preview-upload-button preview-upload-button--instagram"
+                          icon="photo_camera"
+                          label="Upload to Instagram"
+                          no-caps
+                          unelevated
+                          disable
+                        />
                       </div>
                     </div>
                   </q-card-section>
@@ -783,6 +813,7 @@ const formData = ref<CampaignGenerateRequest>({
   target_audience: '',
   tone: '',
   video_context: '',
+  tts_voice: 'en-US_MichaelV3Voice',
 });
 
 // Tone options
@@ -795,6 +826,15 @@ const toneOptions = [
   'Humorous',
   'Urgent',
   'Educational',
+];
+
+// TTS Voice options
+const ttsVoiceOptions = [
+  { label: 'Michael (US Male)', value: 'en-US_MichaelV3Voice' },
+  { label: 'Allison (US Female)', value: 'en-US_AllisonV3Voice' },
+  { label: 'Lisa (US Female)', value: 'en-US_LisaV3Voice' },
+  { label: 'Emily (US Female)', value: 'en-US_EmilyV3Voice' },
+  { label: 'Henry (US Male)', value: 'en-US_HenryV3Voice' },
 ];
 
 // Campaign state
@@ -831,6 +871,16 @@ const mediaPreviewText = computed(() => {
     '';
 
   return text.length > 360 ? `${text.slice(0, 360)}...` : text;
+});
+
+const generationSourceLabel = computed(() => {
+  if (currentCampaign.value?.generation_source === 'watsonx.ai') {
+    return currentCampaign.value.model_id
+      ? `IBM watsonx.ai · ${currentCampaign.value.model_id}`
+      : 'IBM watsonx.ai';
+  }
+
+  return 'Template fallback';
 });
 
 const hasVideoBlueprint = computed(() => {
@@ -887,6 +937,7 @@ function loadDemoData() {
     target_audience: 'Tech-savvy homeowners aged 30-50 who are environmentally conscious',
     tone: 'Professional',
     video_context: 'Product demonstration showing the device installation, mobile app interface, and real-time energy savings dashboard',
+    tts_voice: 'en-US_MichaelV3Voice',
   };
 
   $q.notify({
@@ -937,10 +988,6 @@ function formatFileSize(sizeBytes: number) {
   return `${(sizeKb / 1024).toFixed(1)} MB`;
 }
 
-function formatDuration(durationSeconds: number) {
-  return `${durationSeconds.toFixed(1)}s`;
-}
-
 async function handleUploadMedia() {
   if (!selectedVideoFile.value) {
     $q.notify({
@@ -989,7 +1036,10 @@ async function handleGenerateCampaign() {
 
     $q.notify({
       type: 'positive',
-      message: 'Campaign generated successfully!',
+      message:
+        response.generation_source === 'watsonx.ai'
+          ? `Campaign generated with IBM watsonx.ai (${response.model_id}).`
+          : 'Campaign generated with template fallback.',
       position: 'top',
     });
   } catch (error) {
@@ -1040,6 +1090,7 @@ async function handleRenderPreviewVideo() {
       visual_style: campaign.visual_style,
       call_to_action: campaign.call_to_action,
       require_source_video: true,
+      tts_voice: formData.value.tts_voice,
     };
 
     if (mediaUploadResult.value.file_url) {
@@ -1593,6 +1644,42 @@ function useImprovedVersion() {
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #111827;
+  }
+
+  .preview-upload-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .preview-upload-button {
+    min-height: 40px;
+    border-radius: 8px;
+    color: #ffffff !important;
+    font-weight: 700;
+    opacity: 1 !important;
+
+    :deep(.q-icon) {
+      color: #ffffff;
+    }
+
+    &--youtube {
+      background: #ff0033 !important;
+    }
+
+    &--tiktok {
+      background: #111111 !important;
+      box-shadow: inset 3px 0 0 #25f4ee, inset -3px 0 0 #fe2c55;
+    }
+
+    &--instagram {
+      background: linear-gradient(135deg, #f58529 0%, #dd2a7b 48%, #8134af 100%) !important;
+    }
+
+    @media (max-width: 760px) {
+      width: 100%;
+    }
   }
 
   .preview-video-meta {

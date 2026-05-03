@@ -3,13 +3,30 @@ KadriX Campaign Service
 Generates campaign blueprints from product ideas and demo-video context.
 """
 from datetime import datetime
+import json
+import logging
+import os
 from typing import List, Optional
 import uuid
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+try:
+    from ibm_watsonx_ai import Credentials
+    from ibm_watsonx_ai.foundation_models import ModelInference
+    WATSONX_AVAILABLE = True
+except ImportError:
+    WATSONX_AVAILABLE = False
+
 app = FastAPI(title="KadriX Campaign Service", version="1.1.0")
+logger = logging.getLogger(__name__)
+
+USE_WATSONX = os.getenv("USE_WATSONX", "false").lower() == "true"
+WATSONX_API_KEY = os.getenv("WATSONX_API_KEY", "")
+WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")
+WATSONX_URL = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
+WATSONX_MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-4-h-small")
 
 
 class CampaignGenerateRequest(BaseModel):
@@ -55,6 +72,8 @@ class CampaignResponse(BaseModel):
     music_direction: str
     visual_style: str
     one_minute_video_plan: str
+    generation_source: str = "template"
+    model_id: Optional[str] = None
 
 
 @app.get("/health")
@@ -64,6 +83,8 @@ async def health_check():
         "status": "healthy",
         "service": "campaign-service",
         "version": "1.1.0",
+        "watsonx_enabled": is_watsonx_configured(),
+        "watsonx_model_id": WATSONX_MODEL_ID if is_watsonx_configured() else None,
     }
 
 
@@ -72,15 +93,131 @@ async def generate_campaign(request: CampaignGenerateRequest):
     """
     Generate a product-specific launch campaign and 60-second video ad blueprint.
 
-    This is deterministic MVP logic. It does not call watsonx.ai, text-to-speech,
-    or video rendering services yet.
+    Uses IBM watsonx.ai when configured and falls back to deterministic MVP logic.
     """
+    campaign_id = str(uuid.uuid4())
+    generated_at = datetime.utcnow().isoformat()
+
+    if is_watsonx_configured():
+        try:
+            blueprint = build_campaign_blueprint_with_watsonx(request)
+            return CampaignResponse(
+                campaign_id=campaign_id,
+                version=1,
+                generated_at=generated_at,
+                generation_source="watsonx.ai",
+                model_id=WATSONX_MODEL_ID,
+                **blueprint,
+            )
+        except Exception as exc:
+            logger.warning("watsonx campaign generation failed; using template fallback: %s", exc)
+
     return CampaignResponse(
-        campaign_id=str(uuid.uuid4()),
+        campaign_id=campaign_id,
         version=1,
-        generated_at=datetime.utcnow().isoformat(),
+        generated_at=generated_at,
+        generation_source="template_fallback",
         **build_campaign_blueprint(request),
     )
+
+
+def is_watsonx_configured() -> bool:
+    return bool(USE_WATSONX and WATSONX_AVAILABLE and WATSONX_API_KEY and WATSONX_PROJECT_ID)
+
+
+def build_campaign_blueprint_with_watsonx(request: CampaignGenerateRequest) -> dict:
+    model = ModelInference(
+        model_id=WATSONX_MODEL_ID,
+        credentials=Credentials(api_key=WATSONX_API_KEY, url=WATSONX_URL),
+        project_id=WATSONX_PROJECT_ID,
+        params={
+            "decoding_method": "sample",
+            "temperature": 0.55,
+            "top_p": 0.85,
+            "max_new_tokens": 1800,
+            "min_new_tokens": 500,
+        },
+    )
+    generated_text = model.generate_text(prompt=build_watsonx_campaign_prompt(request))
+    data = parse_json_object(generated_text)
+    fallback = build_campaign_blueprint(request)
+
+    for key, value in fallback.items():
+        data.setdefault(key, value)
+
+    data["ad_copy_variants"] = [
+        build_ad_variant(
+            platform=item.get("platform", "LinkedIn"),
+            headline=item.get("headline", "")[:90],
+            body=item.get("body", "")[:600],
+        )
+        for item in data.get("ad_copy_variants", [])
+        if isinstance(item, dict)
+    ] or fallback["ad_copy_variants"]
+
+    data["storyboard_scenes"] = [
+        StoryboardScene(
+            timestamp=item.get("timestamp", ""),
+            scene_title=item.get("scene_title", ""),
+            visual_direction=item.get("visual_direction", ""),
+            narration=item.get("narration", ""),
+        )
+        for item in data.get("storyboard_scenes", [])
+        if isinstance(item, dict)
+    ] or fallback["storyboard_scenes"]
+
+    return data
+
+
+def build_watsonx_campaign_prompt(request: CampaignGenerateRequest) -> str:
+    return f"""
+You are KadriX, an IBM hackathon launch strategist for developer products.
+Generate one launch campaign blueprint as strict JSON only. No markdown. No explanation.
+
+Product idea: {request.product_idea}
+Description: {request.description}
+Campaign goal: {request.campaign_goal}
+Target audience: {request.target_audience}
+Tone: {request.tone}
+Demo/video context: {request.video_context or "No uploaded video context provided."}
+
+Required JSON keys:
+product_summary: string
+target_audience: string
+campaign_angle: string
+value_proposition: string
+marketing_hooks: array of 4 concise strings
+ad_copy_variants: array of 3 objects with platform, headline, body
+call_to_action: string
+video_script: string
+main_hook: string
+voiceover_script: string
+video_concept: string
+storyboard_scenes: array of 6 objects with timestamp, scene_title, visual_direction, narration
+mood_direction: string
+music_direction: string
+visual_style: string
+one_minute_video_plan: string
+
+Make it specific to the product, demo-led, credible for a hackathon MVP, and suitable for a 60-second launch preview video.
+"""
+
+
+def parse_json_object(raw_text: str) -> dict:
+    text = raw_text.strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        text = text.replace("json\n", "", 1).replace("JSON\n", "", 1)
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("watsonx response did not contain a JSON object")
+
+    parsed = json.loads(text[start : end + 1])
+    if not isinstance(parsed, dict):
+        raise ValueError("watsonx response JSON was not an object")
+    return parsed
 
 
 def build_campaign_blueprint(request: CampaignGenerateRequest) -> dict:
