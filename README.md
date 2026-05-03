@@ -505,10 +505,4 @@ This project is a hackathon proof of concept built for the IBM Bob Dev Day Hacka
 
 ## Acknowledgments
 
-Built with **IBM Bob IDE** as the primary development partner for the **IBM Bob Dev Day Hackathon**.
-
-Special thanks to the IBM Bob team for creating an AI-powered development assistant that accelerated this project from concept to working prototype.
-
----
-
-**Made with Bob** 🤖
+Built with IBM Bob IDE for the IBM Bob Dev Day Hackathon.
